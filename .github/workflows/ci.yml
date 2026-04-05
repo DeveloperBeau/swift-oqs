@@ -13,7 +13,7 @@ concurrency:
 jobs:
   build-macos:
     name: macOS
-    runs-on: macos-15
+    runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
       - name: Install Swift 6.3
