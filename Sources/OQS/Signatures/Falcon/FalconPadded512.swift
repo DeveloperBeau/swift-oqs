@@ -1,44 +1,29 @@
 import Foundation
 internal import Cliboqs
 
-/// Falcon-padded-512 digital signatures.
+/// Falcon-Padded-512 digital signatures (constant-size signatures, padded variant, 128-bit security).
 ///
-/// Falcon-padded-512 is a variant of Falcon-512 with padded signatures for constant-size output, providing 128-bit security.
+/// Same security as Falcon-512, but signatures are padded to a fixed size.
+/// Handy when you need predictable signature lengths in a wire protocol.
 ///
-/// ## Signing and Verifying
-///
-/// **Step 1 — Alice generates a signing key and shares her public key:**
 /// ```swift
-/// let aliceSigningKey = try FalconPadded512.PrivateKey()
-/// let alicePublicKeyData = aliceSigningKey.publicKey.rawRepresentation
-/// // Share alicePublicKeyData with anyone who needs to verify Alice's signatures
+/// // Generate a signing key
+/// let signer = try FalconPadded512.PrivateKey()
+///
+/// // Sign something
+/// let sig = try signer.signature(for: messageData)
+///
+/// // Anyone with the public key can verify
+/// let pub = try FalconPadded512.PublicKey(rawRepresentation: signerPublicKeyData)
+/// let legit = try pub.isValidSignature(sig, for: messageData)
 /// ```
 ///
-/// **Step 2 — Alice signs a message:**
+/// Keys can be saved and loaded:
 /// ```swift
-/// let message = Data("Transfer $100 to Bob".utf8)
-/// let signature = try aliceSigningKey.signature(for: message)
-/// // Send both message and signature to the verifier
-/// ```
-///
-/// **Step 3 — Bob verifies the signature using Alice's public key:**
-/// ```swift
-/// let alicePublicKey = try FalconPadded512.PublicKey(rawRepresentation: alicePublicKeyData)
-/// let isAuthentic = try alicePublicKey.isValidSignature(signature, for: message)
-/// // isAuthentic == true means Alice signed this message
-/// ```
-///
-/// ## Saving and Loading Keys
-///
-/// ```swift
-/// // Save
-/// let privateKeyData = aliceSigningKey.rawRepresentation
-/// let publicKeyData = aliceSigningKey.publicKey.rawRepresentation
-///
-/// // Load
+/// let saved = signer.rawRepresentation
 /// let loaded = try FalconPadded512.PrivateKey(
-///     rawRepresentation: privateKeyData,
-///     publicKeyRepresentation: publicKeyData
+///     rawRepresentation: saved,
+///     publicKeyRepresentation: signer.publicKey.rawRepresentation
 /// )
 /// ```
 public enum FalconPadded512: Sendable {

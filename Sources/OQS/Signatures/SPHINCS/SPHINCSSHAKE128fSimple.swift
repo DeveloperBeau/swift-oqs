@@ -1,44 +1,29 @@
 import Foundation
 internal import Cliboqs
 
-/// SPHINCS+-SHAKE-128f-simple digital signatures.
+/// SPHINCS+-SHAKE-128f-simple digital signatures (hash-based, conservative — no lattice assumptions, 128-bit security).
 ///
-/// SPHINCS+ is a stateless, hash-based signature scheme offering conservative security. This SHAKE-128f variant provides 128-bit security optimized for fast signing.
+/// Uses SHAKE internally, optimized for fast signing. No lattice
+/// assumptions — security relies purely on hash function properties.
 ///
-/// ## Signing and Verifying
-///
-/// **Step 1 — Alice generates a signing key and shares her public key:**
 /// ```swift
-/// let aliceSigningKey = try SPHINCSSHAKE128fSimple.PrivateKey()
-/// let alicePublicKeyData = aliceSigningKey.publicKey.rawRepresentation
-/// // Share alicePublicKeyData with anyone who needs to verify Alice's signatures
+/// // Generate a signing key
+/// let signer = try SPHINCSSHAKE128fSimple.PrivateKey()
+///
+/// // Sign something
+/// let sig = try signer.signature(for: messageData)
+///
+/// // Anyone with the public key can verify
+/// let pub = try SPHINCSSHAKE128fSimple.PublicKey(rawRepresentation: signerPublicKeyData)
+/// let legit = try pub.isValidSignature(sig, for: messageData)
 /// ```
 ///
-/// **Step 2 — Alice signs a message:**
+/// Keys can be saved and loaded:
 /// ```swift
-/// let message = Data("Transfer $100 to Bob".utf8)
-/// let signature = try aliceSigningKey.signature(for: message)
-/// // Send both message and signature to the verifier
-/// ```
-///
-/// **Step 3 — Bob verifies the signature using Alice's public key:**
-/// ```swift
-/// let alicePublicKey = try SPHINCSSHAKE128fSimple.PublicKey(rawRepresentation: alicePublicKeyData)
-/// let isAuthentic = try alicePublicKey.isValidSignature(signature, for: message)
-/// // isAuthentic == true means Alice signed this message
-/// ```
-///
-/// ## Saving and Loading Keys
-///
-/// ```swift
-/// // Save
-/// let privateKeyData = aliceSigningKey.rawRepresentation
-/// let publicKeyData = aliceSigningKey.publicKey.rawRepresentation
-///
-/// // Load
+/// let saved = signer.rawRepresentation
 /// let loaded = try SPHINCSSHAKE128fSimple.PrivateKey(
-///     rawRepresentation: privateKeyData,
-///     publicKeyRepresentation: publicKeyData
+///     rawRepresentation: saved,
+///     publicKeyRepresentation: signer.publicKey.rawRepresentation
 /// )
 /// ```
 public enum SPHINCSSHAKE128fSimple: Sendable {

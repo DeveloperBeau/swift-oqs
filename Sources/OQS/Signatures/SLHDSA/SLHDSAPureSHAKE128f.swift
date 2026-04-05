@@ -1,44 +1,29 @@
 import Foundation
 internal import Cliboqs
 
-/// SLH-DSA Pure SHAKE-128f digital signatures.
+/// SLH-DSA-SHAKE-128f digital signatures (NIST standard (FIPS 205), hash-based, 128-bit security).
 ///
-/// SLH-DSA (FIPS 205) is a NIST standard stateless hash-based signature scheme. This SHAKE-128f variant provides 128-bit security optimized for fast signing.
+/// FIPS 205 standard. Uses SHAKE internally, optimized for fast signing.
+/// Hash-based security — no lattice or code-based assumptions.
 ///
-/// ## Signing and Verifying
-///
-/// **Step 1 — Alice generates a signing key and shares her public key:**
 /// ```swift
-/// let aliceSigningKey = try SLHDSAPureSHAKE128f.PrivateKey()
-/// let alicePublicKeyData = aliceSigningKey.publicKey.rawRepresentation
-/// // Share alicePublicKeyData with anyone who needs to verify Alice's signatures
+/// // Generate a signing key
+/// let signer = try SLHDSAPureSHAKE128f.PrivateKey()
+///
+/// // Sign something
+/// let sig = try signer.signature(for: messageData)
+///
+/// // Anyone with the public key can verify
+/// let pub = try SLHDSAPureSHAKE128f.PublicKey(rawRepresentation: signerPublicKeyData)
+/// let legit = try pub.isValidSignature(sig, for: messageData)
 /// ```
 ///
-/// **Step 2 — Alice signs a message:**
+/// Keys can be saved and loaded:
 /// ```swift
-/// let message = Data("Transfer $100 to Bob".utf8)
-/// let signature = try aliceSigningKey.signature(for: message)
-/// // Send both message and signature to the verifier
-/// ```
-///
-/// **Step 3 — Bob verifies the signature using Alice's public key:**
-/// ```swift
-/// let alicePublicKey = try SLHDSAPureSHAKE128f.PublicKey(rawRepresentation: alicePublicKeyData)
-/// let isAuthentic = try alicePublicKey.isValidSignature(signature, for: message)
-/// // isAuthentic == true means Alice signed this message
-/// ```
-///
-/// ## Saving and Loading Keys
-///
-/// ```swift
-/// // Save
-/// let privateKeyData = aliceSigningKey.rawRepresentation
-/// let publicKeyData = aliceSigningKey.publicKey.rawRepresentation
-///
-/// // Load
+/// let saved = signer.rawRepresentation
 /// let loaded = try SLHDSAPureSHAKE128f.PrivateKey(
-///     rawRepresentation: privateKeyData,
-///     publicKeyRepresentation: publicKeyData
+///     rawRepresentation: saved,
+///     publicKeyRepresentation: signer.publicKey.rawRepresentation
 /// )
 /// ```
 public enum SLHDSAPureSHAKE128f: Sendable {

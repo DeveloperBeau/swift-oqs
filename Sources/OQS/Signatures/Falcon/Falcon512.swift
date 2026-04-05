@@ -1,44 +1,28 @@
 import Foundation
 internal import Cliboqs
 
-/// Falcon-512 digital signatures.
+/// Falcon-512 digital signatures (lattice-based, compact signatures, 128-bit security).
 ///
-/// Falcon-512 is a lattice-based signature scheme providing 128-bit security with compact signatures.
+/// Good default for most signing needs. Small signatures and fast verification.
 ///
-/// ## Signing and Verifying
-///
-/// **Step 1 — Alice generates a signing key and shares her public key:**
 /// ```swift
-/// let aliceSigningKey = try Falcon512.PrivateKey()
-/// let alicePublicKeyData = aliceSigningKey.publicKey.rawRepresentation
-/// // Share alicePublicKeyData with anyone who needs to verify Alice's signatures
+/// // Generate a signing key
+/// let signer = try Falcon512.PrivateKey()
+///
+/// // Sign something
+/// let sig = try signer.signature(for: messageData)
+///
+/// // Anyone with the public key can verify
+/// let pub = try Falcon512.PublicKey(rawRepresentation: signerPublicKeyData)
+/// let legit = try pub.isValidSignature(sig, for: messageData)
 /// ```
 ///
-/// **Step 2 — Alice signs a message:**
+/// Keys can be saved and loaded:
 /// ```swift
-/// let message = Data("Transfer $100 to Bob".utf8)
-/// let signature = try aliceSigningKey.signature(for: message)
-/// // Send both message and signature to the verifier
-/// ```
-///
-/// **Step 3 — Bob verifies the signature using Alice's public key:**
-/// ```swift
-/// let alicePublicKey = try Falcon512.PublicKey(rawRepresentation: alicePublicKeyData)
-/// let isAuthentic = try alicePublicKey.isValidSignature(signature, for: message)
-/// // isAuthentic == true means Alice signed this message
-/// ```
-///
-/// ## Saving and Loading Keys
-///
-/// ```swift
-/// // Save
-/// let privateKeyData = aliceSigningKey.rawRepresentation
-/// let publicKeyData = aliceSigningKey.publicKey.rawRepresentation
-///
-/// // Load
+/// let saved = signer.rawRepresentation
 /// let loaded = try Falcon512.PrivateKey(
-///     rawRepresentation: privateKeyData,
-///     publicKeyRepresentation: publicKeyData
+///     rawRepresentation: saved,
+///     publicKeyRepresentation: signer.publicKey.rawRepresentation
 /// )
 /// ```
 public enum Falcon512: Sendable {

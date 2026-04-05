@@ -1,67 +1,34 @@
 import Foundation
 internal import Cliboqs
 
-/// ML-KEM-512 key encapsulation.
+/// ML-KEM-512 key encapsulation (NIST standard, 128-bit security).
 ///
-/// ML-KEM-512 is a NIST standard (FIPS 203) lattice-based KEM providing 128-bit security.
+/// Smaller keys and ciphertexts than the other ML-KEM sizes. Pick this when
+/// bandwidth matters more than security margin.
 ///
-/// ## Establishing a Shared Secret
-///
-/// Two parties (Alice and Bob) establish a shared secret without transmitting it directly.
-///
-/// **Step 1 — Alice generates a key pair and shares her public key:**
 /// ```swift
-/// let alicePrivateKey = try MLKEM512.PrivateKey()
-/// let alicePublicKeyData = alicePrivateKey.publicKey.rawRepresentation
-/// // Send alicePublicKeyData to Bob (this is safe to share publicly)
+/// // Alice generates a key pair
+/// let alice = try MLKEM512.PrivateKey()
+///
+/// // Bob gets Alice's public key and creates a shared secret
+/// let pub = try MLKEM512.PublicKey(rawRepresentation: alicePublicKeyData)
+/// let result = try pub.generateSharedSecret()
+/// // Bob has result.sharedSecret — send result.ciphertext to Alice
+///
+/// // Alice decrypts it
+/// let secret = try alice.decryptSharedSecret(result.ciphertext)
+/// // secret == result.sharedSecret
+///
+/// // Use the 32-byte secret as an AES or ChaCha20 key
+/// let key = SymmetricKey(data: secret.rawRepresentation)
 /// ```
 ///
-/// **Step 2 — Bob receives Alice's public key and generates a shared secret:**
+/// Keys can be saved and loaded:
 /// ```swift
-/// let alicePublicKey = try MLKEM512.PublicKey(rawRepresentation: alicePublicKeyData)
-/// let result = try alicePublicKey.generateSharedSecret()
-///
-/// let bobSharedSecret = result.sharedSecret
-/// // Send result.ciphertext back to Alice (safe to send over any channel)
-/// ```
-///
-/// **Step 3 — Alice decrypts the shared secret:**
-/// ```swift
-/// let aliceSharedSecret = try alicePrivateKey.decryptSharedSecret(ciphertext)
-/// // aliceSharedSecret == bobSharedSecret
-/// // Both parties now have identical shared secret bytes for symmetric encryption
-/// ```
-///
-/// ## Using the Shared Secret
-///
-/// The shared secret is a cryptographic key that both parties now hold. Common uses:
-///
-/// - **Encrypt messages** — Use it as an AES-GCM or ChaCha20 key to encrypt data between the parties.
-/// - **Derive multiple keys** — Feed it into a key derivation function (like HKDF) to create
-///   separate keys for encryption, authentication, etc.
-/// - **Establish a secure channel** — Use it as the session key for an encrypted communication protocol.
-///
-/// ```swift
-/// // Example: Use the shared secret as an AES-GCM key
-/// let symmetricKey = SymmetricKey(data: sharedSecret.rawRepresentation)
-/// let encrypted = try AES.GCM.seal(plaintext, using: symmetricKey)
-/// ```
-///
-/// > The shared secret should be used immediately or stored securely.
-/// > Never transmit it — the entire point of key encapsulation is that
-/// > both parties derive it independently.
-///
-/// ## Saving and Loading Keys
-///
-/// ```swift
-/// // Save
-/// let privateKeyData = alicePrivateKey.rawRepresentation
-/// let publicKeyData = alicePrivateKey.publicKey.rawRepresentation
-///
-/// // Load
+/// let saved = alice.rawRepresentation
 /// let loaded = try MLKEM512.PrivateKey(
-///     rawRepresentation: privateKeyData,
-///     publicKeyRepresentation: publicKeyData
+///     rawRepresentation: saved,
+///     publicKeyRepresentation: alice.publicKey.rawRepresentation
 /// )
 /// ```
 public enum MLKEM512: Sendable {
