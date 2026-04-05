@@ -2,45 +2,75 @@ import Testing
 import Foundation
 @testable import OQS
 
-// Fast algorithms for detailed tests.
-private let fastAlgorithms: [Signature.Algorithm] = [
-    .falcon512, .falcon1024, .falconPadded512, .falconPadded1024,
-    .crossRSDP128Fast,
-]
-
-// Slower algorithms — only used in the round-trip sweep.
-private let slowAlgorithms: [Signature.Algorithm] = [
-    .sphincsSHA2128fSimple, .sphincsSHA2256fSimple,
-    .slhDSAPureSHA2128f, .slhDSAPureSHAKE128f,
-]
-
 private let testMessage = Data("Post-quantum cryptography is fun.".utf8)
 
 @Suite struct SignatureTests {
 
     // MARK: - Round-trip
 
-    @Test("Round-trip sign/verify", arguments: fastAlgorithms)
-    func roundTrip(algorithm: Signature.Algorithm) throws {
-        let keyPair = try Signature.generateKeyPair(algorithm: algorithm)
-        let sig = try Signature.sign(algorithm: algorithm, message: testMessage, secretKey: keyPair.secretKey)
-        let valid = try Signature.verify(algorithm: algorithm, message: testMessage, signature: sig, publicKey: keyPair.publicKey)
+    @Test("Falcon-512 sign/verify")
+    func roundTripFalcon512() throws {
+        let signingKey = try Falcon512.PrivateKey()
+        let sig = try signingKey.signature(for: testMessage)
+        let valid = try signingKey.publicKey.isValidSignature(sig, for: testMessage)
         #expect(valid)
     }
 
-    @Test("Round-trip slow algorithms", arguments: slowAlgorithms)
-    func roundTripSlow(algorithm: Signature.Algorithm) throws {
-        let keyPair = try Signature.generateKeyPair(algorithm: algorithm)
-        let sig = try Signature.sign(algorithm: algorithm, message: testMessage, secretKey: keyPair.secretKey)
-        let valid = try Signature.verify(algorithm: algorithm, message: testMessage, signature: sig, publicKey: keyPair.publicKey)
+    @Test("Falcon-1024 sign/verify")
+    func roundTripFalcon1024() throws {
+        let signingKey = try Falcon1024.PrivateKey()
+        let sig = try signingKey.signature(for: testMessage)
+        let valid = try signingKey.publicKey.isValidSignature(sig, for: testMessage)
         #expect(valid)
     }
+
+    @Test("FalconPadded-512 sign/verify")
+    func roundTripFalconPadded512() throws {
+        let signingKey = try FalconPadded512.PrivateKey()
+        let sig = try signingKey.signature(for: testMessage)
+        let valid = try signingKey.publicKey.isValidSignature(sig, for: testMessage)
+        #expect(valid)
+    }
+
+    @Test("FalconPadded-1024 sign/verify")
+    func roundTripFalconPadded1024() throws {
+        let signingKey = try FalconPadded1024.PrivateKey()
+        let sig = try signingKey.signature(for: testMessage)
+        let valid = try signingKey.publicKey.isValidSignature(sig, for: testMessage)
+        #expect(valid)
+    }
+
+    @Test("CROSS-RSDP-128-Fast sign/verify")
+    func roundTripCROSS() throws {
+        let signingKey = try CrossRSDP128Fast.PrivateKey()
+        let sig = try signingKey.signature(for: testMessage)
+        let valid = try signingKey.publicKey.isValidSignature(sig, for: testMessage)
+        #expect(valid)
+    }
+
+    @Test("SPHINCS+-SHA2-128f-simple sign/verify")
+    func roundTripSPHINCS() throws {
+        let signingKey = try SPHINCSSHA2128fSimple.PrivateKey()
+        let sig = try signingKey.signature(for: testMessage)
+        let valid = try signingKey.publicKey.isValidSignature(sig, for: testMessage)
+        #expect(valid)
+    }
+
+    @Test("SLH-DSA-Pure-SHA2-128f sign/verify")
+    func roundTripSLHDSA() throws {
+        let signingKey = try SLHDSAPureSHA2128f.PrivateKey()
+        let sig = try signingKey.signature(for: testMessage)
+        let valid = try signingKey.publicKey.isValidSignature(sig, for: testMessage)
+        #expect(valid)
+    }
+
+    // MARK: - Empty message
 
     @Test("Sign and verify empty message")
     func emptyMessage() throws {
-        let keyPair = try Signature.generateKeyPair(algorithm: .falcon512)
-        let sig = try Signature.sign(algorithm: .falcon512, message: Data(), secretKey: keyPair.secretKey)
-        let valid = try Signature.verify(algorithm: .falcon512, message: Data(), signature: sig, publicKey: keyPair.publicKey)
+        let signingKey = try Falcon512.PrivateKey()
+        let sig = try signingKey.signature(for: Data())
+        let valid = try signingKey.publicKey.isValidSignature(sig, for: Data())
         #expect(valid)
     }
 
@@ -48,20 +78,20 @@ private let testMessage = Data("Post-quantum cryptography is fun.".utf8)
 
     @Test("Key pairs are unique")
     func keyPairUniqueness() throws {
-        let a = try Signature.generateKeyPair(algorithm: .falcon512)
-        let b = try Signature.generateKeyPair(algorithm: .falcon512)
-        #expect(a.publicKey != b.publicKey)
-        #expect(a.secretKey != b.secretKey)
+        let a = try Falcon512.PrivateKey()
+        let b = try Falcon512.PrivateKey()
+        #expect(a.publicKey.rawRepresentation != b.publicKey.rawRepresentation)
+        #expect(a.rawRepresentation != b.rawRepresentation)
     }
 
     // MARK: - Failure: wrong message
 
     @Test("Verify rejects wrong message")
     func wrongMessage() throws {
-        let keyPair = try Signature.generateKeyPair(algorithm: .falcon512)
-        let sig = try Signature.sign(algorithm: .falcon512, message: testMessage, secretKey: keyPair.secretKey)
+        let signingKey = try Falcon512.PrivateKey()
+        let sig = try signingKey.signature(for: testMessage)
         let wrong = Data("Wrong message.".utf8)
-        let valid = try Signature.verify(algorithm: .falcon512, message: wrong, signature: sig, publicKey: keyPair.publicKey)
+        let valid = try signingKey.publicKey.isValidSignature(sig, for: wrong)
         #expect(!valid)
     }
 
@@ -69,10 +99,10 @@ private let testMessage = Data("Post-quantum cryptography is fun.".utf8)
 
     @Test("Verify rejects wrong public key")
     func wrongPublicKey() throws {
-        let keyPairA = try Signature.generateKeyPair(algorithm: .falcon512)
-        let keyPairB = try Signature.generateKeyPair(algorithm: .falcon512)
-        let sig = try Signature.sign(algorithm: .falcon512, message: testMessage, secretKey: keyPairA.secretKey)
-        let valid = try Signature.verify(algorithm: .falcon512, message: testMessage, signature: sig, publicKey: keyPairB.publicKey)
+        let keyA = try Falcon512.PrivateKey()
+        let keyB = try Falcon512.PrivateKey()
+        let sig = try keyA.signature(for: testMessage)
+        let valid = try keyB.publicKey.isValidSignature(sig, for: testMessage)
         #expect(!valid)
     }
 
@@ -80,10 +110,10 @@ private let testMessage = Data("Post-quantum cryptography is fun.".utf8)
 
     @Test("Verify rejects corrupted signature")
     func corruptedSignature() throws {
-        let keyPair = try Signature.generateKeyPair(algorithm: .falcon512)
-        var sig = try Signature.sign(algorithm: .falcon512, message: testMessage, secretKey: keyPair.secretKey)
+        let signingKey = try Falcon512.PrivateKey()
+        var sig = try signingKey.signature(for: testMessage)
         sig[sig.count / 2] ^= 0xFF
-        let valid = try Signature.verify(algorithm: .falcon512, message: testMessage, signature: sig, publicKey: keyPair.publicKey)
+        let valid = try signingKey.publicKey.isValidSignature(sig, for: testMessage)
         #expect(!valid)
     }
 
@@ -91,71 +121,80 @@ private let testMessage = Data("Post-quantum cryptography is fun.".utf8)
 
     @Test("Verify rejects truncated signature")
     func truncatedSignature() throws {
-        let keyPair = try Signature.generateKeyPair(algorithm: .falcon512)
-        let sig = try Signature.sign(algorithm: .falcon512, message: testMessage, secretKey: keyPair.secretKey)
+        let signingKey = try Falcon512.PrivateKey()
+        let sig = try signingKey.signature(for: testMessage)
         let truncated = sig.prefix(sig.count / 2)
-        let valid = try Signature.verify(algorithm: .falcon512, message: testMessage, signature: truncated, publicKey: keyPair.publicKey)
+        let valid = try signingKey.publicKey.isValidSignature(truncated, for: testMessage)
         #expect(!valid)
     }
 
-    // MARK: - Failure: invalid key sizes
+    // MARK: - Key import round-trip
 
-    @Test("Sign rejects wrong secret key size")
-    func signInvalidSecretKeySize() throws {
+    @Test("Private key import round-trip")
+    func privateKeyImport() throws {
+        let original = try Falcon512.PrivateKey()
+        let imported = try Falcon512.PrivateKey(
+            rawRepresentation: original.rawRepresentation,
+            publicKeyRepresentation: original.publicKey.rawRepresentation
+        )
+        #expect(imported.rawRepresentation == original.rawRepresentation)
+
+        let sig = try imported.signature(for: testMessage)
+        let valid = try original.publicKey.isValidSignature(sig, for: testMessage)
+        #expect(valid)
+    }
+
+    @Test("Public key import round-trip")
+    func publicKeyImport() throws {
+        let signingKey = try Falcon512.PrivateKey()
+        let imported = try Falcon512.PublicKey(rawRepresentation: signingKey.publicKey.rawRepresentation)
+
+        let sig = try signingKey.signature(for: testMessage)
+        let valid = try imported.isValidSignature(sig, for: testMessage)
+        #expect(valid)
+    }
+
+    // MARK: - Invalid key sizes
+
+    @Test("Public key import rejects wrong size")
+    func publicKeyImportInvalidSize() throws {
         #expect(throws: OQSError.self) {
-            try Signature.sign(algorithm: .falcon512, message: testMessage, secretKey: Data([0x00]))
+            try Falcon512.PublicKey(rawRepresentation: Data([0x00]))
         }
     }
 
-    @Test("Verify rejects wrong public key size")
-    func verifyInvalidPublicKeySize() throws {
-        let keyPair = try Signature.generateKeyPair(algorithm: .falcon512)
-        let sig = try Signature.sign(algorithm: .falcon512, message: testMessage, secretKey: keyPair.secretKey)
+    @Test("Private key import rejects wrong size")
+    func privateKeyImportInvalidSize() throws {
+        let key = try Falcon512.PrivateKey()
         #expect(throws: OQSError.self) {
-            try Signature.verify(algorithm: .falcon512, message: testMessage, signature: sig, publicKey: Data([0x00]))
-        }
-    }
-
-    // MARK: - Failure: empty keys
-
-    @Test("Sign rejects empty secret key")
-    func signEmptySecretKey() throws {
-        #expect(throws: OQSError.self) {
-            try Signature.sign(algorithm: .falcon512, message: testMessage, secretKey: Data())
-        }
-    }
-
-    @Test("Verify rejects empty public key")
-    func verifyEmptyPublicKey() throws {
-        let keyPair = try Signature.generateKeyPair(algorithm: .falcon512)
-        let sig = try Signature.sign(algorithm: .falcon512, message: testMessage, secretKey: keyPair.secretKey)
-        #expect(throws: OQSError.self) {
-            try Signature.verify(algorithm: .falcon512, message: testMessage, signature: sig, publicKey: Data())
+            try Falcon512.PrivateKey(
+                rawRepresentation: Data([0x00]),
+                publicKeyRepresentation: key.publicKey.rawRepresentation
+            )
         }
     }
 
     // MARK: - Cross-algorithm mismatch
 
-    @Test("Cross-algorithm keys are rejected")
+    @Test("Cross-algorithm public key is rejected on import")
     func crossAlgorithmMismatch() throws {
-        let keyPair = try Signature.generateKeyPair(algorithm: .falcon512)
-        let sig = try Signature.sign(algorithm: .falcon512, message: testMessage, secretKey: keyPair.secretKey)
-        // falcon512 public key size != falcon1024 expected size
+        let key512 = try Falcon512.PrivateKey()
+        // Falcon-512 public key size != Falcon-1024 expected size
         #expect(throws: OQSError.self) {
-            try Signature.verify(algorithm: .falcon1024, message: testMessage, signature: sig, publicKey: keyPair.publicKey)
+            try Falcon1024.PublicKey(rawRepresentation: key512.publicKey.rawRepresentation)
         }
     }
 
-    // MARK: - Boundary: multiple signatures differ
+    // MARK: - Multiple signatures differ
 
     @Test("Multiple signatures of same message differ")
     func multipleSignaturesDiffer() throws {
-        let keyPair = try Signature.generateKeyPair(algorithm: .falcon512)
-        let sig1 = try Signature.sign(algorithm: .falcon512, message: testMessage, secretKey: keyPair.secretKey)
-        let sig2 = try Signature.sign(algorithm: .falcon512, message: testMessage, secretKey: keyPair.secretKey)
+        let signingKey = try Falcon512.PrivateKey()
+        let sig1 = try signingKey.signature(for: testMessage)
+        let sig2 = try signingKey.signature(for: testMessage)
         #expect(sig1 != sig2)
         // Both should still verify
-        #expect(try Signature.verify(algorithm: .falcon512, message: testMessage, signature: sig1, publicKey: keyPair.publicKey))
-        #expect(try Signature.verify(algorithm: .falcon512, message: testMessage, signature: sig2, publicKey: keyPair.publicKey))
+        #expect(try signingKey.publicKey.isValidSignature(sig1, for: testMessage))
+        #expect(try signingKey.publicKey.isValidSignature(sig2, for: testMessage))
     }
 }

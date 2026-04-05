@@ -2,140 +2,192 @@ import Testing
 import Foundation
 @testable import OQS
 
-// Algorithms that are fast enough to run detailed tests on.
-private let fastAlgorithms: [KEM.Algorithm] = [
-    .mlkem512, .mlkem768, .mlkem1024,
-    .hqc128, .hqc192, .hqc256,
-]
-
-// Classic McEliece variants are very slow; only include in the full sweep.
-private let slowAlgorithms: [KEM.Algorithm] = [
-    .classicMcEliece348864,
-    .classicMcEliece460896,
-    .classicMcEliece6688128,
-    .classicMcEliece6960119,
-    .classicMcEliece8192128,
-]
-
 @Suite struct KEMTests {
 
     // MARK: - Round-trip
 
-    @Test("Round-trip encap/decap", arguments: fastAlgorithms)
-    func roundTrip(algorithm: KEM.Algorithm) throws {
-        let keyPair = try KEM.generateKeyPair(algorithm: algorithm)
-        let encap = try KEM.encapsulate(algorithm: algorithm, publicKey: keyPair.publicKey)
-        let decapped = try KEM.decapsulate(algorithm: algorithm, ciphertext: encap.ciphertext, secretKey: keyPair.secretKey)
-        #expect(decapped == encap.sharedSecret)
+    @Test("ML-KEM-512 round-trip")
+    func roundTrip512() throws {
+        let privateKey = try MLKEM512.PrivateKey()
+        let sealed = try privateKey.publicKey.encapsulate()
+        let secret = try privateKey.decapsulate(sealed.ciphertext)
+        #expect(secret.rawRepresentation == sealed.sharedSecret.rawRepresentation)
     }
 
-    @Test("Round-trip Classic McEliece 348864")
+    @Test("ML-KEM-768 round-trip")
+    func roundTrip768() throws {
+        let privateKey = try MLKEM768.PrivateKey()
+        let sealed = try privateKey.publicKey.encapsulate()
+        let secret = try privateKey.decapsulate(sealed.ciphertext)
+        #expect(secret.rawRepresentation == sealed.sharedSecret.rawRepresentation)
+    }
+
+    @Test("ML-KEM-1024 round-trip")
+    func roundTrip1024() throws {
+        let privateKey = try MLKEM1024.PrivateKey()
+        let sealed = try privateKey.publicKey.encapsulate()
+        let secret = try privateKey.decapsulate(sealed.ciphertext)
+        #expect(secret.rawRepresentation == sealed.sharedSecret.rawRepresentation)
+    }
+
+    @Test("HQC-128 round-trip")
+    func roundTripHQC128() throws {
+        let privateKey = try HQC128.PrivateKey()
+        let sealed = try privateKey.publicKey.encapsulate()
+        let secret = try privateKey.decapsulate(sealed.ciphertext)
+        #expect(secret.rawRepresentation == sealed.sharedSecret.rawRepresentation)
+    }
+
+    @Test("HQC-192 round-trip")
+    func roundTripHQC192() throws {
+        let privateKey = try HQC192.PrivateKey()
+        let sealed = try privateKey.publicKey.encapsulate()
+        let secret = try privateKey.decapsulate(sealed.ciphertext)
+        #expect(secret.rawRepresentation == sealed.sharedSecret.rawRepresentation)
+    }
+
+    @Test("HQC-256 round-trip")
+    func roundTripHQC256() throws {
+        let privateKey = try HQC256.PrivateKey()
+        let sealed = try privateKey.publicKey.encapsulate()
+        let secret = try privateKey.decapsulate(sealed.ciphertext)
+        #expect(secret.rawRepresentation == sealed.sharedSecret.rawRepresentation)
+    }
+
+    @Test("Classic McEliece 348864 round-trip")
     func roundTripMcEliece() throws {
-        let alg = KEM.Algorithm.classicMcEliece348864
-        let keyPair = try KEM.generateKeyPair(algorithm: alg)
-        let encap = try KEM.encapsulate(algorithm: alg, publicKey: keyPair.publicKey)
-        let decapped = try KEM.decapsulate(algorithm: alg, ciphertext: encap.ciphertext, secretKey: keyPair.secretKey)
-        #expect(decapped == encap.sharedSecret)
+        let privateKey = try ClassicMcEliece348864.PrivateKey()
+        let sealed = try privateKey.publicKey.encapsulate()
+        let secret = try privateKey.decapsulate(sealed.ciphertext)
+        #expect(secret.rawRepresentation == sealed.sharedSecret.rawRepresentation)
     }
 
     // MARK: - Key pair uniqueness
 
     @Test("Key pairs are unique")
     func keyPairUniqueness() throws {
-        let a = try KEM.generateKeyPair(algorithm: .mlkem768)
-        let b = try KEM.generateKeyPair(algorithm: .mlkem768)
-        #expect(a.publicKey != b.publicKey)
-        #expect(a.secretKey != b.secretKey)
+        let a = try MLKEM768.PrivateKey()
+        let b = try MLKEM768.PrivateKey()
+        #expect(a.publicKey.rawRepresentation != b.publicKey.rawRepresentation)
+        #expect(a.rawRepresentation != b.rawRepresentation)
     }
 
     // MARK: - Multiple encapsulations produce different ciphertexts
 
     @Test("Multiple encapsulations differ")
     func multipleEncapsulations() throws {
-        let keyPair = try KEM.generateKeyPair(algorithm: .mlkem768)
-        let first = try KEM.encapsulate(algorithm: .mlkem768, publicKey: keyPair.publicKey)
-        let second = try KEM.encapsulate(algorithm: .mlkem768, publicKey: keyPair.publicKey)
+        let privateKey = try MLKEM768.PrivateKey()
+        let first = try privateKey.publicKey.encapsulate()
+        let second = try privateKey.publicKey.encapsulate()
         #expect(first.ciphertext != second.ciphertext)
-        #expect(first.sharedSecret != second.sharedSecret)
+        #expect(first.sharedSecret.rawRepresentation != second.sharedSecret.rawRepresentation)
     }
 
     // MARK: - Wrong secret key
 
-    @Test("Decapsulate with wrong secret key", arguments: fastAlgorithms)
-    func wrongSecretKey(algorithm: KEM.Algorithm) throws {
-        let keyPairA = try KEM.generateKeyPair(algorithm: algorithm)
-        let keyPairB = try KEM.generateKeyPair(algorithm: algorithm)
-        let encap = try KEM.encapsulate(algorithm: algorithm, publicKey: keyPairA.publicKey)
+    @Test("Decapsulate with wrong secret key produces different secret")
+    func wrongSecretKey() throws {
+        let keyA = try MLKEM768.PrivateKey()
+        let keyB = try MLKEM768.PrivateKey()
+        let sealed = try keyA.publicKey.encapsulate()
 
         // liboqs may return a different secret or throw depending on algorithm
         do {
-            let decapped = try KEM.decapsulate(algorithm: algorithm, ciphertext: encap.ciphertext, secretKey: keyPairB.secretKey)
-            #expect(decapped != encap.sharedSecret)
+            let decapped = try keyB.decapsulate(sealed.ciphertext)
+            #expect(decapped.rawRepresentation != sealed.sharedSecret.rawRepresentation)
         } catch {
             // acceptable: some algorithms throw on decapsulation failure
         }
     }
 
+    // MARK: - Key import round-trip
+
+    @Test("Private key import round-trip")
+    func privateKeyImport() throws {
+        let original = try MLKEM768.PrivateKey()
+        let imported = try MLKEM768.PrivateKey(
+            rawRepresentation: original.rawRepresentation,
+            publicKeyRepresentation: original.publicKey.rawRepresentation
+        )
+        #expect(imported.rawRepresentation == original.rawRepresentation)
+        #expect(imported.publicKey.rawRepresentation == original.publicKey.rawRepresentation)
+
+        // Imported key should still work for decapsulation
+        let sealed = try original.publicKey.encapsulate()
+        let secret = try imported.decapsulate(sealed.ciphertext)
+        #expect(secret.rawRepresentation == sealed.sharedSecret.rawRepresentation)
+    }
+
+    @Test("Public key import round-trip")
+    func publicKeyImport() throws {
+        let privateKey = try MLKEM768.PrivateKey()
+        let imported = try MLKEM768.PublicKey(rawRepresentation: privateKey.publicKey.rawRepresentation)
+        #expect(imported.rawRepresentation == privateKey.publicKey.rawRepresentation)
+
+        // Imported public key should work for encapsulation
+        let sealed = try imported.encapsulate()
+        let secret = try privateKey.decapsulate(sealed.ciphertext)
+        #expect(secret.rawRepresentation == sealed.sharedSecret.rawRepresentation)
+    }
+
     // MARK: - Invalid key sizes
 
-    @Test("Encapsulate rejects wrong public key size")
-    func encapsulateInvalidPublicKeySize() throws {
+    @Test("Public key import rejects wrong size")
+    func publicKeyImportInvalidSize() throws {
         #expect(throws: OQSError.self) {
-            try KEM.encapsulate(algorithm: .mlkem768, publicKey: Data([0x00]))
+            try MLKEM768.PublicKey(rawRepresentation: Data([0x00]))
         }
     }
 
-    @Test("Decapsulate rejects wrong secret key size")
-    func decapsulateInvalidSecretKeySize() throws {
-        let keyPair = try KEM.generateKeyPair(algorithm: .mlkem768)
-        let encap = try KEM.encapsulate(algorithm: .mlkem768, publicKey: keyPair.publicKey)
+    @Test("Private key import rejects wrong size")
+    func privateKeyImportInvalidSize() throws {
+        let key = try MLKEM768.PrivateKey()
         #expect(throws: OQSError.self) {
-            try KEM.decapsulate(algorithm: .mlkem768, ciphertext: encap.ciphertext, secretKey: Data([0x00]))
+            try MLKEM768.PrivateKey(
+                rawRepresentation: Data([0x00]),
+                publicKeyRepresentation: key.publicKey.rawRepresentation
+            )
         }
     }
 
-    @Test("Decapsulate rejects wrong ciphertext size")
-    func decapsulateInvalidCiphertextSize() throws {
-        let keyPair = try KEM.generateKeyPair(algorithm: .mlkem768)
+    @Test("Private key import rejects wrong public key size")
+    func privateKeyImportInvalidPublicKeySize() throws {
+        let key = try MLKEM768.PrivateKey()
         #expect(throws: OQSError.self) {
-            try KEM.decapsulate(algorithm: .mlkem768, ciphertext: Data([0x00]), secretKey: keyPair.secretKey)
+            try MLKEM768.PrivateKey(
+                rawRepresentation: key.rawRepresentation,
+                publicKeyRepresentation: Data([0x00])
+            )
         }
     }
 
     // MARK: - Empty inputs
 
-    @Test("Encapsulate rejects empty public key")
-    func encapsulateEmptyPublicKey() throws {
+    @Test("Public key import rejects empty data")
+    func publicKeyImportEmpty() throws {
         #expect(throws: OQSError.self) {
-            try KEM.encapsulate(algorithm: .mlkem768, publicKey: Data())
+            try MLKEM768.PublicKey(rawRepresentation: Data())
         }
     }
 
-    @Test("Decapsulate rejects empty secret key")
-    func decapsulateEmptySecretKey() throws {
-        let keyPair = try KEM.generateKeyPair(algorithm: .mlkem768)
-        let encap = try KEM.encapsulate(algorithm: .mlkem768, publicKey: keyPair.publicKey)
+    @Test("Private key import rejects empty secret key")
+    func privateKeyImportEmptySecret() throws {
         #expect(throws: OQSError.self) {
-            try KEM.decapsulate(algorithm: .mlkem768, ciphertext: encap.ciphertext, secretKey: Data())
-        }
-    }
-
-    @Test("Decapsulate rejects empty ciphertext")
-    func decapsulateEmptyCiphertext() throws {
-        let keyPair = try KEM.generateKeyPair(algorithm: .mlkem768)
-        #expect(throws: OQSError.self) {
-            try KEM.decapsulate(algorithm: .mlkem768, ciphertext: Data(), secretKey: keyPair.secretKey)
+            try MLKEM768.PrivateKey(
+                rawRepresentation: Data(),
+                publicKeyRepresentation: Data()
+            )
         }
     }
 
     // MARK: - Cross-algorithm mismatch
 
-    @Test("Cross-algorithm keys are rejected")
+    @Test("Cross-algorithm public key is rejected on import")
     func crossAlgorithmMismatch() throws {
-        let keyPair512 = try KEM.generateKeyPair(algorithm: .mlkem512)
-        // mlkem512 public key size != mlkem768 expected size
+        let key512 = try MLKEM512.PrivateKey()
+        // ML-KEM-512 public key size != ML-KEM-768 expected size
         #expect(throws: OQSError.self) {
-            try KEM.encapsulate(algorithm: .mlkem768, publicKey: keyPair512.publicKey)
+            try MLKEM768.PublicKey(rawRepresentation: key512.publicKey.rawRepresentation)
         }
     }
 
@@ -143,11 +195,11 @@ private let slowAlgorithms: [KEM.Algorithm] = [
 
     @Test("Truncated ciphertext is rejected")
     func truncatedCiphertext() throws {
-        let keyPair = try KEM.generateKeyPair(algorithm: .mlkem768)
-        let encap = try KEM.encapsulate(algorithm: .mlkem768, publicKey: keyPair.publicKey)
-        let truncated = encap.ciphertext.prefix(encap.ciphertext.count - 1)
+        let privateKey = try MLKEM768.PrivateKey()
+        let sealed = try privateKey.publicKey.encapsulate()
+        let truncated = sealed.ciphertext.prefix(sealed.ciphertext.count - 1)
         #expect(throws: OQSError.self) {
-            try KEM.decapsulate(algorithm: .mlkem768, ciphertext: truncated, secretKey: keyPair.secretKey)
+            try privateKey.decapsulate(truncated)
         }
     }
 
@@ -155,11 +207,11 @@ private let slowAlgorithms: [KEM.Algorithm] = [
 
     @Test("Extended ciphertext is rejected")
     func extendedCiphertext() throws {
-        let keyPair = try KEM.generateKeyPair(algorithm: .mlkem768)
-        let encap = try KEM.encapsulate(algorithm: .mlkem768, publicKey: keyPair.publicKey)
-        let extended = encap.ciphertext + Data([0x00])
+        let privateKey = try MLKEM768.PrivateKey()
+        let sealed = try privateKey.publicKey.encapsulate()
+        let extended = sealed.ciphertext + Data([0x00])
         #expect(throws: OQSError.self) {
-            try KEM.decapsulate(algorithm: .mlkem768, ciphertext: extended, secretKey: keyPair.secretKey)
+            try privateKey.decapsulate(extended)
         }
     }
 }

@@ -2,48 +2,179 @@ import Testing
 import Foundation
 @testable import OQS
 
-// Classic McEliece keygen is very slow and memory-intensive; test one
-// representative to confirm the family works, then verify the rest
-// via raw-value uniqueness.
-private let kemAlgorithmsExcludingLargeMcEliece: [KEM.Algorithm] = KEM.Algorithm.allCases.filter {
-    switch $0 {
-    case .classicMcEliece460896, .classicMcEliece6688128,
-         .classicMcEliece6960119, .classicMcEliece8192128:
-        false
-    default:
-        true
-    }
-}
+@Suite(.serialized) struct AlgorithmTests {
 
-@Suite struct AlgorithmTests {
+    // MARK: - KEM key generation
 
-    // MARK: - KEM algorithms accepted by liboqs
+    @Test("ML-KEM-512 keygen")
+    func mlkem512() throws { _ = try MLKEM512.PrivateKey() }
 
-    @Test("Every KEM algorithm is available in liboqs", arguments: kemAlgorithmsExcludingLargeMcEliece)
-    func kemAlgorithmAvailable(algorithm: KEM.Algorithm) throws {
-        _ = try KEM.generateKeyPair(algorithm: algorithm)
-    }
+    @Test("ML-KEM-768 keygen")
+    func mlkem768() throws { _ = try MLKEM768.PrivateKey() }
 
-    // MARK: - Signature algorithms accepted by liboqs
+    @Test("ML-KEM-1024 keygen")
+    func mlkem1024() throws { _ = try MLKEM1024.PrivateKey() }
 
-    @Test("Every Signature algorithm is available in liboqs", arguments: Signature.Algorithm.allCases)
-    func signatureAlgorithmAvailable(algorithm: Signature.Algorithm) throws {
-        _ = try Signature.generateKeyPair(algorithm: algorithm)
-    }
+    @Test("HQC-128 keygen")
+    func hqc128() throws { _ = try HQC128.PrivateKey() }
 
-    // MARK: - Raw value uniqueness
+    @Test("HQC-192 keygen")
+    func hqc192() throws { _ = try HQC192.PrivateKey() }
 
-    @Test("KEM algorithm raw values are unique")
-    func kemRawValuesUnique() {
-        let rawValues = KEM.Algorithm.allCases.map(\.rawValue)
-        #expect(Set(rawValues).count == rawValues.count)
-    }
+    @Test("HQC-256 keygen")
+    func hqc256() throws { _ = try HQC256.PrivateKey() }
 
-    @Test("Signature algorithm raw values are unique")
-    func signatureRawValuesUnique() {
-        let rawValues = Signature.Algorithm.allCases.map(\.rawValue)
-        #expect(Set(rawValues).count == rawValues.count)
-    }
+    @Test("Classic McEliece 348864 keygen")
+    func classicMcEliece348864() throws { _ = try ClassicMcEliece348864.PrivateKey() }
+
+    // Classic McEliece 460896+ variants require too much memory for CI keygen.
+    // Their types compile and share the same internal path as 348864.
+
+    // MARK: - Signature key generation: Falcon
+
+    @Test("Falcon-512 keygen")
+    func falcon512() throws { _ = try Falcon512.PrivateKey() }
+
+    @Test("Falcon-1024 keygen")
+    func falcon1024() throws { _ = try Falcon1024.PrivateKey() }
+
+    @Test("FalconPadded-512 keygen")
+    func falconPadded512() throws { _ = try FalconPadded512.PrivateKey() }
+
+    @Test("FalconPadded-1024 keygen")
+    func falconPadded1024() throws { _ = try FalconPadded1024.PrivateKey() }
+
+    // MARK: - Signature key generation: SPHINCS+
+
+    @Test("SPHINCS+-SHA2-128f-simple keygen")
+    func sphincsSHA2128f() throws { _ = try SPHINCSSHA2128fSimple.PrivateKey() }
+
+    @Test("SPHINCS+-SHA2-128s-simple keygen")
+    func sphincsSHA2128s() throws { _ = try SPHINCSSHA2128sSimple.PrivateKey() }
+
+    @Test("SPHINCS+-SHA2-192f-simple keygen")
+    func sphincsSHA2192f() throws { _ = try SPHINCSSHA2192fSimple.PrivateKey() }
+
+    @Test("SPHINCS+-SHA2-192s-simple keygen")
+    func sphincsSHA2192s() throws { _ = try SPHINCSSHA2192sSimple.PrivateKey() }
+
+    @Test("SPHINCS+-SHA2-256f-simple keygen")
+    func sphincsSHA2256f() throws { _ = try SPHINCSSHA2256fSimple.PrivateKey() }
+
+    @Test("SPHINCS+-SHA2-256s-simple keygen")
+    func sphincsSHA2256s() throws { _ = try SPHINCSSHA2256sSimple.PrivateKey() }
+
+    @Test("SPHINCS+-SHAKE-128f-simple keygen")
+    func sphincsSHAKE128f() throws { _ = try SPHINCSSHAKE128fSimple.PrivateKey() }
+
+    @Test("SPHINCS+-SHAKE-128s-simple keygen")
+    func sphincsSHAKE128s() throws { _ = try SPHINCSSHAKE128sSimple.PrivateKey() }
+
+    @Test("SPHINCS+-SHAKE-192f-simple keygen")
+    func sphincsSHAKE192f() throws { _ = try SPHINCSSHAKE192fSimple.PrivateKey() }
+
+    @Test("SPHINCS+-SHAKE-192s-simple keygen")
+    func sphincsSHAKE192s() throws { _ = try SPHINCSSHAKE192sSimple.PrivateKey() }
+
+    @Test("SPHINCS+-SHAKE-256f-simple keygen")
+    func sphincsSHAKE256f() throws { _ = try SPHINCSSHAKE256fSimple.PrivateKey() }
+
+    @Test("SPHINCS+-SHAKE-256s-simple keygen")
+    func sphincsSHAKE256s() throws { _ = try SPHINCSSHAKE256sSimple.PrivateKey() }
+
+    // MARK: - Signature key generation: CROSS
+
+    @Test("CROSS-RSDP-128-Balanced keygen")
+    func crossRSDP128Balanced() throws { _ = try CrossRSDP128Balanced.PrivateKey() }
+
+    @Test("CROSS-RSDP-128-Fast keygen")
+    func crossRSDP128Fast() throws { _ = try CrossRSDP128Fast.PrivateKey() }
+
+    @Test("CROSS-RSDP-128-Small keygen")
+    func crossRSDP128Small() throws { _ = try CrossRSDP128Small.PrivateKey() }
+
+    @Test("CROSS-RSDP-192-Balanced keygen")
+    func crossRSDP192Balanced() throws { _ = try CrossRSDP192Balanced.PrivateKey() }
+
+    @Test("CROSS-RSDP-192-Fast keygen")
+    func crossRSDP192Fast() throws { _ = try CrossRSDP192Fast.PrivateKey() }
+
+    @Test("CROSS-RSDP-192-Small keygen")
+    func crossRSDP192Small() throws { _ = try CrossRSDP192Small.PrivateKey() }
+
+    @Test("CROSS-RSDP-256-Balanced keygen")
+    func crossRSDP256Balanced() throws { _ = try CrossRSDP256Balanced.PrivateKey() }
+
+    @Test("CROSS-RSDP-256-Fast keygen")
+    func crossRSDP256Fast() throws { _ = try CrossRSDP256Fast.PrivateKey() }
+
+    @Test("CROSS-RSDP-256-Small keygen")
+    func crossRSDP256Small() throws { _ = try CrossRSDP256Small.PrivateKey() }
+
+    @Test("CROSS-RSDPG-128-Balanced keygen")
+    func crossRSDPG128Balanced() throws { _ = try CrossRSDPG128Balanced.PrivateKey() }
+
+    @Test("CROSS-RSDPG-128-Fast keygen")
+    func crossRSDPG128Fast() throws { _ = try CrossRSDPG128Fast.PrivateKey() }
+
+    @Test("CROSS-RSDPG-128-Small keygen")
+    func crossRSDPG128Small() throws { _ = try CrossRSDPG128Small.PrivateKey() }
+
+    @Test("CROSS-RSDPG-192-Balanced keygen")
+    func crossRSDPG192Balanced() throws { _ = try CrossRSDPG192Balanced.PrivateKey() }
+
+    @Test("CROSS-RSDPG-192-Fast keygen")
+    func crossRSDPG192Fast() throws { _ = try CrossRSDPG192Fast.PrivateKey() }
+
+    @Test("CROSS-RSDPG-192-Small keygen")
+    func crossRSDPG192Small() throws { _ = try CrossRSDPG192Small.PrivateKey() }
+
+    @Test("CROSS-RSDPG-256-Balanced keygen")
+    func crossRSDPG256Balanced() throws { _ = try CrossRSDPG256Balanced.PrivateKey() }
+
+    @Test("CROSS-RSDPG-256-Fast keygen")
+    func crossRSDPG256Fast() throws { _ = try CrossRSDPG256Fast.PrivateKey() }
+
+    @Test("CROSS-RSDPG-256-Small keygen")
+    func crossRSDPG256Small() throws { _ = try CrossRSDPG256Small.PrivateKey() }
+
+    // MARK: - Signature key generation: SLH-DSA
+
+    @Test("SLH-DSA-Pure-SHA2-128s keygen")
+    func slhDSAPureSHA2128s() throws { _ = try SLHDSAPureSHA2128s.PrivateKey() }
+
+    @Test("SLH-DSA-Pure-SHA2-128f keygen")
+    func slhDSAPureSHA2128f() throws { _ = try SLHDSAPureSHA2128f.PrivateKey() }
+
+    @Test("SLH-DSA-Pure-SHA2-192s keygen")
+    func slhDSAPureSHA2192s() throws { _ = try SLHDSAPureSHA2192s.PrivateKey() }
+
+    @Test("SLH-DSA-Pure-SHA2-192f keygen")
+    func slhDSAPureSHA2192f() throws { _ = try SLHDSAPureSHA2192f.PrivateKey() }
+
+    @Test("SLH-DSA-Pure-SHA2-256s keygen")
+    func slhDSAPureSHA2256s() throws { _ = try SLHDSAPureSHA2256s.PrivateKey() }
+
+    @Test("SLH-DSA-Pure-SHA2-256f keygen")
+    func slhDSAPureSHA2256f() throws { _ = try SLHDSAPureSHA2256f.PrivateKey() }
+
+    @Test("SLH-DSA-Pure-SHAKE-128s keygen")
+    func slhDSAPureSHAKE128s() throws { _ = try SLHDSAPureSHAKE128s.PrivateKey() }
+
+    @Test("SLH-DSA-Pure-SHAKE-128f keygen")
+    func slhDSAPureSHAKE128f() throws { _ = try SLHDSAPureSHAKE128f.PrivateKey() }
+
+    @Test("SLH-DSA-Pure-SHAKE-192s keygen")
+    func slhDSAPureSHAKE192s() throws { _ = try SLHDSAPureSHAKE192s.PrivateKey() }
+
+    @Test("SLH-DSA-Pure-SHAKE-192f keygen")
+    func slhDSAPureSHAKE192f() throws { _ = try SLHDSAPureSHAKE192f.PrivateKey() }
+
+    @Test("SLH-DSA-Pure-SHAKE-256s keygen")
+    func slhDSAPureSHAKE256s() throws { _ = try SLHDSAPureSHAKE256s.PrivateKey() }
+
+    @Test("SLH-DSA-Pure-SHAKE-256f keygen")
+    func slhDSAPureSHAKE256f() throws { _ = try SLHDSAPureSHAKE256f.PrivateKey() }
 
     // MARK: - Error descriptions
 
