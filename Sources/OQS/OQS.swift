@@ -1,1 +1,10 @@
-// swift-oqs — Swift bindings for liboqs post-quantum cryptography
+internal import Cliboqs
+
+private let _oqsInit: Void = {
+    OQS_init()
+}()
+
+@inline(__always)
+func ensureInitialized() {
+    _ = _oqsInit
+}
