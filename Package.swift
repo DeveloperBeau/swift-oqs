@@ -1,6 +1,18 @@
-// swift-tools-version: 6.1
+// swift-tools-version: 6.3
 
 import PackageDescription
+
+let experimentalFeatures: [SwiftSetting] = [
+    .swiftLanguageMode(.v6),
+    .enableExperimentalFeature("StrictConcurrency"),
+    .enableExperimentalFeature("AccessLevelOnImport"),
+    .enableExperimentalFeature("RegionBasedIsolation"),
+    .enableExperimentalFeature("GlobalActorIsolatedTypesUsability"),
+    .enableExperimentalFeature("InferSendableFromCaptures"),
+    .enableExperimentalFeature("BitwiseCopyable"),
+    .enableExperimentalFeature("MoveOnlyTypes"),
+    .enableExperimentalFeature("LifetimeDependence"),
+]
 
 let package = Package(
     name: "swift-oqs",
@@ -29,17 +41,12 @@ let package = Package(
         .target(
             name: "OQS",
             dependencies: ["Cliboqs"],
-            swiftSettings: [
-                .swiftLanguageMode(.v6),
-                .enableExperimentalFeature("AccessLevelOnImport"),
-            ]
+            swiftSettings: experimentalFeatures
         ),
         .testTarget(
             name: "OQSTests",
             dependencies: ["OQS"],
-            swiftSettings: [
-                .swiftLanguageMode(.v6),
-            ]
+            swiftSettings: experimentalFeatures
         ),
     ]
 )
