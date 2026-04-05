@@ -22,7 +22,7 @@ Add swift-oqs as a dependency in your `Package.swift`:
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/DeveloperBeau/swift-oqs.git", from: "0.1.0"),
+    .package(url: "https://github.com/DeveloperBeau/swift-oqs.git", from: "2.0.0"),
 ]
 ```
 
@@ -39,20 +39,10 @@ Then add `"OQS"` to your target's dependencies:
 ```swift
 import OQS
 
-// Generate a key pair
-let keyPair = try KEM.generateKeyPair(algorithm: .mlkem768)
-
-// Encapsulate -- produces a ciphertext and shared secret
-let result = try KEM.encapsulate(algorithm: .mlkem768, publicKey: keyPair.publicKey)
-
-// Decapsulate -- recovers the same shared secret
-let sharedSecret = try KEM.decapsulate(
-    algorithm: .mlkem768,
-    ciphertext: result.ciphertext,
-    secretKey: keyPair.secretKey
-)
-
-assert(result.sharedSecret == sharedSecret)
+let privateKey = try MLKEM768.PrivateKey()
+let sealed = try privateKey.publicKey.encapsulate()
+let secret = try privateKey.decapsulate(sealed.ciphertext)
+assert(secret == sealed.sharedSecret)
 ```
 
 ### Digital Signatures
@@ -60,18 +50,10 @@ assert(result.sharedSecret == sharedSecret)
 ```swift
 import OQS
 
-let keyPair = try Signature.generateKeyPair(algorithm: .falcon512)
-
+let signingKey = try Falcon512.PrivateKey()
 let message = Data("Hello, post-quantum world!".utf8)
-let signature = try Signature.sign(algorithm: .falcon512, message: message, secretKey: keyPair.secretKey)
-
-let valid = try Signature.verify(
-    algorithm: .falcon512,
-    message: message,
-    signature: signature,
-    publicKey: keyPair.publicKey
-)
-
+let signature = try signingKey.signature(for: message)
+let valid = try signingKey.publicKey.isValidSignature(signature, for: message)
 assert(valid)
 ```
 
