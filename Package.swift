@@ -195,7 +195,7 @@ let package = Package(
             publicHeadersPath: "include",
             cSettings: [
                 .define("OQS_DIST_BUILD", to: "1"),
-                .define("OQS_HAVE_POSIX_MEMALIGN", to: "1"),
+                .define("OQS_HAVE_POSIX_MEMALIGN", to: "1", .when(platforms: [.macOS, .iOS, .tvOS, .watchOS, .linux])),
                 .define("SNOVA_LIBOQS", to: "1"),
                 // pqclean_shims must come first so its sha2.h/sha3.h shims
                 // are found before the internal common/sha2/sha2.h etc.
