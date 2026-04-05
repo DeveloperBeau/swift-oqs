@@ -40,9 +40,9 @@ Then add `"OQS"` to your target's dependencies:
 import OQS
 
 let privateKey = try MLKEM768.PrivateKey()
-let sealed = try privateKey.publicKey.encapsulate()
-let secret = try privateKey.decapsulate(sealed.ciphertext)
-assert(secret == sealed.sharedSecret)
+let result = try privateKey.publicKey.generateSharedSecret()
+let secret = try privateKey.decryptSharedSecret(result.ciphertext)
+assert(secret == result.sharedSecret)
 ```
 
 ### Digital Signatures

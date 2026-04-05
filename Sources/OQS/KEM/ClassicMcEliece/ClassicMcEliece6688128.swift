@@ -16,18 +16,18 @@ internal import Cliboqs
 /// // Send alicePublicKeyData to Bob (this is safe to share publicly)
 /// ```
 ///
-/// **Step 2 — Bob receives Alice's public key and encapsulates a shared secret:**
+/// **Step 2 — Bob receives Alice's public key and generates a shared secret:**
 /// ```swift
 /// let alicePublicKey = try ClassicMcEliece6688128.PublicKey(rawRepresentation: alicePublicKeyData)
-/// let sealed = try alicePublicKey.encapsulate()
+/// let result = try alicePublicKey.generateSharedSecret()
 ///
-/// let bobSharedSecret = sealed.sharedSecret
-/// // Send sealed.ciphertext back to Alice (safe to send over any channel)
+/// let bobSharedSecret = result.sharedSecret
+/// // Send result.ciphertext back to Alice (safe to send over any channel)
 /// ```
 ///
-/// **Step 3 — Alice decapsulates to recover the same shared secret:**
+/// **Step 3 — Alice decrypts the shared secret:**
 /// ```swift
-/// let aliceSharedSecret = try alicePrivateKey.decapsulate(sealed.ciphertext)
+/// let aliceSharedSecret = try alicePrivateKey.decryptSharedSecret(ciphertext)
 /// // aliceSharedSecret == bobSharedSecret
 /// // Both parties now have identical shared secret bytes for symmetric encryption
 /// ```
@@ -75,8 +75,8 @@ public enum ClassicMcEliece6688128: Sendable {
             self.publicKey = PublicKey(unchecked: publicKeyRepresentation)
         }
 
-        /// Decapsulates a shared secret from the given ciphertext.
-        public func decapsulate(_ ciphertext: Data) throws -> SharedSecret {
+        /// Decrypts a shared secret from the given ciphertext.
+        public func decryptSharedSecret(_ ciphertext: Data) throws -> SharedSecret {
             let ss = try kemDecapsulate(algorithm: ClassicMcEliece6688128.algorithmName, ciphertext: ciphertext, secretKey: rawRepresentation)
             return SharedSecret(rawRepresentation: ss)
         }
@@ -100,10 +100,10 @@ public enum ClassicMcEliece6688128: Sendable {
             self.rawRepresentation = rawRepresentation
         }
 
-        /// Encapsulates a new shared secret to this public key.
-        public func encapsulate() throws -> EncapsulationResult {
+        /// Generates a new shared secret using this public key.
+        public func generateSharedSecret() throws -> SharedSecretResult {
             let result = try kemEncapsulate(algorithm: ClassicMcEliece6688128.algorithmName, publicKey: rawRepresentation)
-            return EncapsulationResult(
+            return SharedSecretResult(
                 sharedSecret: SharedSecret(rawRepresentation: result.sharedSecret),
                 ciphertext: result.ciphertext
             )

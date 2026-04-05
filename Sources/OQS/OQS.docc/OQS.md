@@ -8,14 +8,14 @@ OQS provides type-safe access to post-quantum key encapsulation and digital sign
 
 ### Key Encapsulation (KEM)
 
-Generate a key pair, encapsulate a shared secret, and decapsulate it:
+Generate a key pair, generate a shared secret, and decrypt it:
 
 ```swift
 let privateKey = try MLKEM768.PrivateKey()
-let sealed = try privateKey.publicKey.encapsulate()
+let result = try privateKey.publicKey.generateSharedSecret()
 
-// Send sealed.ciphertext to the other party
-let sharedSecret = try privateKey.decapsulate(sealed.ciphertext)
+// Send result.ciphertext to the other party
+let sharedSecret = try privateKey.decryptSharedSecret(result.ciphertext)
 ```
 
 ### Digital Signatures
@@ -58,5 +58,5 @@ let valid = try signingKey.publicKey.isValidSignature(signature, for: message)
 ### Shared Types
 
 - ``SharedSecret``
-- ``EncapsulationResult``
+- ``SharedSecretResult``
 - ``OQSError``

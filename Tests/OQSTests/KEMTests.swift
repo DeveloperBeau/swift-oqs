@@ -9,56 +9,56 @@ import Foundation
     @Test("ML-KEM-512 round-trip")
     func roundTrip512() throws {
         let privateKey = try MLKEM512.PrivateKey()
-        let sealed = try privateKey.publicKey.encapsulate()
-        let secret = try privateKey.decapsulate(sealed.ciphertext)
+        let sealed = try privateKey.publicKey.generateSharedSecret()
+        let secret = try privateKey.decryptSharedSecret(sealed.ciphertext)
         #expect(secret.rawRepresentation == sealed.sharedSecret.rawRepresentation)
     }
 
     @Test("ML-KEM-768 round-trip")
     func roundTrip768() throws {
         let privateKey = try MLKEM768.PrivateKey()
-        let sealed = try privateKey.publicKey.encapsulate()
-        let secret = try privateKey.decapsulate(sealed.ciphertext)
+        let sealed = try privateKey.publicKey.generateSharedSecret()
+        let secret = try privateKey.decryptSharedSecret(sealed.ciphertext)
         #expect(secret.rawRepresentation == sealed.sharedSecret.rawRepresentation)
     }
 
     @Test("ML-KEM-1024 round-trip")
     func roundTrip1024() throws {
         let privateKey = try MLKEM1024.PrivateKey()
-        let sealed = try privateKey.publicKey.encapsulate()
-        let secret = try privateKey.decapsulate(sealed.ciphertext)
+        let sealed = try privateKey.publicKey.generateSharedSecret()
+        let secret = try privateKey.decryptSharedSecret(sealed.ciphertext)
         #expect(secret.rawRepresentation == sealed.sharedSecret.rawRepresentation)
     }
 
     @Test("HQC-128 round-trip")
     func roundTripHQC128() throws {
         let privateKey = try HQC128.PrivateKey()
-        let sealed = try privateKey.publicKey.encapsulate()
-        let secret = try privateKey.decapsulate(sealed.ciphertext)
+        let sealed = try privateKey.publicKey.generateSharedSecret()
+        let secret = try privateKey.decryptSharedSecret(sealed.ciphertext)
         #expect(secret.rawRepresentation == sealed.sharedSecret.rawRepresentation)
     }
 
     @Test("HQC-192 round-trip")
     func roundTripHQC192() throws {
         let privateKey = try HQC192.PrivateKey()
-        let sealed = try privateKey.publicKey.encapsulate()
-        let secret = try privateKey.decapsulate(sealed.ciphertext)
+        let sealed = try privateKey.publicKey.generateSharedSecret()
+        let secret = try privateKey.decryptSharedSecret(sealed.ciphertext)
         #expect(secret.rawRepresentation == sealed.sharedSecret.rawRepresentation)
     }
 
     @Test("HQC-256 round-trip")
     func roundTripHQC256() throws {
         let privateKey = try HQC256.PrivateKey()
-        let sealed = try privateKey.publicKey.encapsulate()
-        let secret = try privateKey.decapsulate(sealed.ciphertext)
+        let sealed = try privateKey.publicKey.generateSharedSecret()
+        let secret = try privateKey.decryptSharedSecret(sealed.ciphertext)
         #expect(secret.rawRepresentation == sealed.sharedSecret.rawRepresentation)
     }
 
     @Test("Classic McEliece 348864 round-trip")
     func roundTripMcEliece() throws {
         let privateKey = try ClassicMcEliece348864.PrivateKey()
-        let sealed = try privateKey.publicKey.encapsulate()
-        let secret = try privateKey.decapsulate(sealed.ciphertext)
+        let sealed = try privateKey.publicKey.generateSharedSecret()
+        let secret = try privateKey.decryptSharedSecret(sealed.ciphertext)
         #expect(secret.rawRepresentation == sealed.sharedSecret.rawRepresentation)
     }
 
@@ -74,29 +74,29 @@ import Foundation
 
     // MARK: - Multiple encapsulations produce different ciphertexts
 
-    @Test("Multiple encapsulations differ")
-    func multipleEncapsulations() throws {
+    @Test("Multiple shared secret generations differ")
+    func multipleGenerations() throws {
         let privateKey = try MLKEM768.PrivateKey()
-        let first = try privateKey.publicKey.encapsulate()
-        let second = try privateKey.publicKey.encapsulate()
+        let first = try privateKey.publicKey.generateSharedSecret()
+        let second = try privateKey.publicKey.generateSharedSecret()
         #expect(first.ciphertext != second.ciphertext)
         #expect(first.sharedSecret.rawRepresentation != second.sharedSecret.rawRepresentation)
     }
 
     // MARK: - Wrong secret key
 
-    @Test("Decapsulate with wrong secret key produces different secret")
+    @Test("Decrypt with wrong secret key produces different secret")
     func wrongSecretKey() throws {
         let keyA = try MLKEM768.PrivateKey()
         let keyB = try MLKEM768.PrivateKey()
-        let sealed = try keyA.publicKey.encapsulate()
+        let sealed = try keyA.publicKey.generateSharedSecret()
 
-        // liboqs may return a different secret or throw depending on algorithm
+        // liboqs may return a different secret or throw depending on the algorithm
         do {
-            let decapped = try keyB.decapsulate(sealed.ciphertext)
-            #expect(decapped.rawRepresentation != sealed.sharedSecret.rawRepresentation)
+            let decrypted = try keyB.decryptSharedSecret(sealed.ciphertext)
+            #expect(decrypted.rawRepresentation != sealed.sharedSecret.rawRepresentation)
         } catch {
-            // acceptable: some algorithms throw on decapsulation failure
+            // acceptable: some algorithms throw on decryption failure
         }
     }
 
@@ -112,9 +112,9 @@ import Foundation
         #expect(imported.rawRepresentation == original.rawRepresentation)
         #expect(imported.publicKey.rawRepresentation == original.publicKey.rawRepresentation)
 
-        // Imported key should still work for decapsulation
-        let sealed = try original.publicKey.encapsulate()
-        let secret = try imported.decapsulate(sealed.ciphertext)
+        // Imported key should still work for decryption
+        let sealed = try original.publicKey.generateSharedSecret()
+        let secret = try imported.decryptSharedSecret(sealed.ciphertext)
         #expect(secret.rawRepresentation == sealed.sharedSecret.rawRepresentation)
     }
 
@@ -124,9 +124,9 @@ import Foundation
         let imported = try MLKEM768.PublicKey(rawRepresentation: privateKey.publicKey.rawRepresentation)
         #expect(imported.rawRepresentation == privateKey.publicKey.rawRepresentation)
 
-        // Imported public key should work for encapsulation
-        let sealed = try imported.encapsulate()
-        let secret = try privateKey.decapsulate(sealed.ciphertext)
+        // Imported public key should work for generating shared secrets
+        let sealed = try imported.generateSharedSecret()
+        let secret = try privateKey.decryptSharedSecret(sealed.ciphertext)
         #expect(secret.rawRepresentation == sealed.sharedSecret.rawRepresentation)
     }
 
@@ -196,10 +196,10 @@ import Foundation
     @Test("Truncated ciphertext is rejected")
     func truncatedCiphertext() throws {
         let privateKey = try MLKEM768.PrivateKey()
-        let sealed = try privateKey.publicKey.encapsulate()
+        let sealed = try privateKey.publicKey.generateSharedSecret()
         let truncated = sealed.ciphertext.prefix(sealed.ciphertext.count - 1)
         #expect(throws: OQSError.self) {
-            try privateKey.decapsulate(truncated)
+            try privateKey.decryptSharedSecret(truncated)
         }
     }
 
@@ -208,10 +208,10 @@ import Foundation
     @Test("Extended ciphertext is rejected")
     func extendedCiphertext() throws {
         let privateKey = try MLKEM768.PrivateKey()
-        let sealed = try privateKey.publicKey.encapsulate()
+        let sealed = try privateKey.publicKey.generateSharedSecret()
         let extended = sealed.ciphertext + Data([0x00])
         #expect(throws: OQSError.self) {
-            try privateKey.decapsulate(extended)
+            try privateKey.decryptSharedSecret(extended)
         }
     }
 }

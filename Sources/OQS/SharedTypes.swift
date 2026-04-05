@@ -11,10 +11,10 @@ public struct SharedSecret: Sendable, Equatable {
     }
 }
 
-/// The result of a KEM encapsulation operation, containing both the shared secret and the ciphertext.
-public struct EncapsulationResult: Sendable {
-    /// The shared secret established by encapsulation.
+/// The result of generating a shared secret, containing both the secret and the ciphertext.
+public struct SharedSecretResult: Sendable {
+    /// The shared secret that was generated.
     public let sharedSecret: SharedSecret
-    /// The ciphertext to send to the private key holder for decapsulation.
+    /// The ciphertext to send to the private key holder for decryption.
     public let ciphertext: Data
 }

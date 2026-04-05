@@ -27,15 +27,15 @@ import Foundation
         #expect(uniquePublicKeys.count == 100)
     }
 
-    @Test("100 concurrent encap/decap round-trips produce matching secrets")
-    func concurrentEncapDecap() async throws {
+    @Test("100 concurrent generate/decrypt round-trips produce matching secrets")
+    func concurrentGenerateDecrypt() async throws {
         let privateKey = try MLKEM768.PrivateKey()
 
         try await withThrowingTaskGroup(of: Void.self) { group in
             for _ in 0..<100 {
                 group.addTask {
-                    let sealed = try privateKey.publicKey.encapsulate()
-                    let secret = try privateKey.decapsulate(sealed.ciphertext)
+                    let sealed = try privateKey.publicKey.generateSharedSecret()
+                    let secret = try privateKey.decryptSharedSecret(sealed.ciphertext)
                     #expect(secret.rawRepresentation == sealed.sharedSecret.rawRepresentation)
                 }
             }
