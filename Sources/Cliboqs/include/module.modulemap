@@ -1,0 +1,4 @@
+module Cliboqs {
+    umbrella header "oqs/oqs.h"
+    export *
+}
