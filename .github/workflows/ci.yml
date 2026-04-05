@@ -1,8 +1,6 @@
 name: CI
 
 on:
-  push:
-    branches: [main]
   pull_request:
     branches: [main]
 
@@ -13,7 +11,7 @@ concurrency:
 jobs:
   build-macos:
     name: macOS
-    runs-on: macos-15
+    runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
       - name: Install Swift 6.3
@@ -37,5 +35,42 @@ jobs:
       - uses: actions/checkout@v4
       - name: Build
         run: swift build -v
+      - name: Test
+        run: swift test -v
+
+  build-windows:
+    name: Windows
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Visual Studio components
+        run: |
+          winget install --id Microsoft.VisualStudio.2022.Community --exact --force --custom "--add Microsoft.VisualStudio.Component.Windows11SDK.22000 --add Microsoft.VisualStudio.Component.VC.Tools.x86.x64" --source winget --accept-source-agreements --accept-package-agreements
+        shell: pwsh
+
+      - name: Install Swift
+        run: |
+          winget install --id Swift.Toolchain -e --source winget --accept-source-agreements --accept-package-agreements
+          # Refresh PATH and set SDKROOT
+          $env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User")
+          ($env:Path -split ';' | Where-Object { $_ -like '*Swift*' }) | ForEach-Object { echo $_ | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append }
+          # Find and set Windows SDK
+          $sdk = Get-ChildItem "$env:LocalAppData\Programs\Swift\Platforms" -Recurse -Filter "Windows.sdk" -Directory -ErrorAction SilentlyContinue | Select-Object -First 1
+          if ($sdk) {
+            echo "SDKROOT=$($sdk.FullName)" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+            Write-Host "SDKROOT=$($sdk.FullName)"
+          } else {
+            Write-Host "Windows.sdk not found, listing Swift install:"
+            Get-ChildItem "$env:LocalAppData\Programs\Swift" -Recurse -Directory -Depth 3 | ForEach-Object { Write-Host $_.FullName }
+          }
+        shell: pwsh
+
+      - name: Swift version
+        run: swift --version
+
+      - name: Build
+        run: swift build -v
+
       - name: Test
         run: swift test -v

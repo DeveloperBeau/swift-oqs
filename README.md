@@ -14,7 +14,7 @@ Post-quantum cryptography for Swift, powered by [liboqs](https://github.com/open
 ## Requirements
 
 - Swift 6.3+
-- macOS 13+ / iOS 16+ / tvOS 16+ / watchOS 9+ / Linux
+- macOS 13+ / iOS 16+ / tvOS 16+ / watchOS 9+ / Linux / Windows
 
 ## Installation
 
