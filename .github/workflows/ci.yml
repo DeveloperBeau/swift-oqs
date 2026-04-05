@@ -54,9 +54,18 @@ jobs:
       - name: Install Swift
         run: |
           winget install --id Swift.Toolchain -e --source winget --accept-source-agreements --accept-package-agreements
-          # Refresh PATH
+          # Refresh PATH and set SDKROOT
           $env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User")
           ($env:Path -split ';' | Where-Object { $_ -like '*Swift*' }) | ForEach-Object { echo $_ | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append }
+          # Find and set Windows SDK
+          $sdk = Get-ChildItem "$env:LocalAppData\Programs\Swift\Platforms" -Recurse -Filter "Windows.sdk" -Directory -ErrorAction SilentlyContinue | Select-Object -First 1
+          if ($sdk) {
+            echo "SDKROOT=$($sdk.FullName)" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+            Write-Host "SDKROOT=$($sdk.FullName)"
+          } else {
+            Write-Host "Windows.sdk not found, listing Swift install:"
+            Get-ChildItem "$env:LocalAppData\Programs\Swift" -Recurse -Directory -Depth 3 | ForEach-Object { Write-Host $_.FullName }
+          }
         shell: pwsh
 
       - name: Swift version
