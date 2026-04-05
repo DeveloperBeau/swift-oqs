@@ -46,12 +46,17 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Install Visual Studio components
+        run: |
+          winget install --id Microsoft.VisualStudio.2022.Community --exact --force --custom "--add Microsoft.VisualStudio.Component.Windows11SDK.22000 --add Microsoft.VisualStudio.Component.VC.Tools.x86.x64" --source winget --accept-source-agreements --accept-package-agreements
+        shell: pwsh
+
       - name: Install Swift
         run: |
           winget install --id Swift.Toolchain -e --source winget --accept-source-agreements --accept-package-agreements
-          # Refresh PATH for this session
+          # Refresh PATH
           $env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User")
-          echo ($env:Path -split ';' | Where-Object { $_ -like '*Swift*' }) | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+          ($env:Path -split ';' | Where-Object { $_ -like '*Swift*' }) | ForEach-Object { echo $_ | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append }
         shell: pwsh
 
       - name: Swift version
