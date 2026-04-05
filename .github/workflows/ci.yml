@@ -16,18 +16,17 @@ jobs:
     runs-on: macos-15
     steps:
       - uses: actions/checkout@v4
-      - name: Install Swift 6.3 via swiftly
+      - name: Install Swift 6.3
         run: |
-          curl -O "https://download.swift.org/swiftly/darwin/swiftly-x86_64.pkg" 2>/dev/null || true
-          # Use swiftly from homebrew if available
-          brew install swiftly || true
-          swiftly install 6.3 || true
-          swiftly use 6.3 || true
-          swift --version
+          curl -sLO "https://download.swift.org/swift-6.3-release/xcode/swift-6.3-RELEASE/swift-6.3-RELEASE-osx.pkg"
+          sudo installer -pkg swift-6.3-RELEASE-osx.pkg -target /
+          export TOOLCHAINS=swift
+          echo "TOOLCHAINS=swift" >> $GITHUB_ENV
+          xcrun --toolchain swift swift --version
       - name: Build
-        run: swift build -v
+        run: xcrun --toolchain swift swift build -v
       - name: Test
-        run: swift test -v
+        run: xcrun --toolchain swift swift test -v
 
   build-linux:
     name: Linux
