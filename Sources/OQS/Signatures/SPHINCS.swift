@@ -1,6 +1,7 @@
 import Foundation
 internal import Cliboqs
 
+/// SPHINCS+-SHA2-128f-simple digital signatures.
 public enum SPHINCSSHA2128fSimple: Sendable {
     static let algorithmName = "SPHINCS+-SHA2-128f-simple"
 
@@ -52,6 +53,7 @@ public enum SPHINCSSHA2128fSimple: Sendable {
     }
 }
 
+/// SPHINCS+-SHA2-128s-simple digital signatures.
 public enum SPHINCSSHA2128sSimple: Sendable {
     static let algorithmName = "SPHINCS+-SHA2-128s-simple"
 
@@ -103,6 +105,7 @@ public enum SPHINCSSHA2128sSimple: Sendable {
     }
 }
 
+/// SPHINCS+-SHA2-192f-simple digital signatures.
 public enum SPHINCSSHA2192fSimple: Sendable {
     static let algorithmName = "SPHINCS+-SHA2-192f-simple"
 
@@ -154,6 +157,7 @@ public enum SPHINCSSHA2192fSimple: Sendable {
     }
 }
 
+/// SPHINCS+-SHA2-192s-simple digital signatures.
 public enum SPHINCSSHA2192sSimple: Sendable {
     static let algorithmName = "SPHINCS+-SHA2-192s-simple"
 
@@ -205,6 +209,7 @@ public enum SPHINCSSHA2192sSimple: Sendable {
     }
 }
 
+/// SPHINCS+-SHA2-256f-simple digital signatures.
 public enum SPHINCSSHA2256fSimple: Sendable {
     static let algorithmName = "SPHINCS+-SHA2-256f-simple"
 
@@ -256,6 +261,7 @@ public enum SPHINCSSHA2256fSimple: Sendable {
     }
 }
 
+/// SPHINCS+-SHA2-256s-simple digital signatures.
 public enum SPHINCSSHA2256sSimple: Sendable {
     static let algorithmName = "SPHINCS+-SHA2-256s-simple"
 
@@ -307,6 +313,7 @@ public enum SPHINCSSHA2256sSimple: Sendable {
     }
 }
 
+/// SPHINCS+-SHAKE-128f-simple digital signatures.
 public enum SPHINCSSHAKE128fSimple: Sendable {
     static let algorithmName = "SPHINCS+-SHAKE-128f-simple"
 
@@ -358,6 +365,7 @@ public enum SPHINCSSHAKE128fSimple: Sendable {
     }
 }
 
+/// SPHINCS+-SHAKE-128s-simple digital signatures.
 public enum SPHINCSSHAKE128sSimple: Sendable {
     static let algorithmName = "SPHINCS+-SHAKE-128s-simple"
 
@@ -409,6 +417,7 @@ public enum SPHINCSSHAKE128sSimple: Sendable {
     }
 }
 
+/// SPHINCS+-SHAKE-192f-simple digital signatures.
 public enum SPHINCSSHAKE192fSimple: Sendable {
     static let algorithmName = "SPHINCS+-SHAKE-192f-simple"
 
@@ -460,6 +469,7 @@ public enum SPHINCSSHAKE192fSimple: Sendable {
     }
 }
 
+/// SPHINCS+-SHAKE-192s-simple digital signatures.
 public enum SPHINCSSHAKE192sSimple: Sendable {
     static let algorithmName = "SPHINCS+-SHAKE-192s-simple"
 
@@ -511,6 +521,7 @@ public enum SPHINCSSHAKE192sSimple: Sendable {
     }
 }
 
+/// SPHINCS+-SHAKE-256f-simple digital signatures.
 public enum SPHINCSSHAKE256fSimple: Sendable {
     static let algorithmName = "SPHINCS+-SHAKE-256f-simple"
 
@@ -562,6 +573,7 @@ public enum SPHINCSSHAKE256fSimple: Sendable {
     }
 }
 
+/// SPHINCS+-SHAKE-256s-simple digital signatures.
 public enum SPHINCSSHAKE256sSimple: Sendable {
     static let algorithmName = "SPHINCS+-SHAKE-256s-simple"
 

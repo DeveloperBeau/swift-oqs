@@ -1,6 +1,7 @@
 import Foundation
 internal import Cliboqs
 
+/// CROSS RSDP-128-balanced digital signatures.
 public enum CrossRSDP128Balanced: Sendable {
     static let algorithmName = "cross-rsdp-128-balanced"
 
@@ -52,6 +53,7 @@ public enum CrossRSDP128Balanced: Sendable {
     }
 }
 
+/// CROSS RSDP-128-fast digital signatures.
 public enum CrossRSDP128Fast: Sendable {
     static let algorithmName = "cross-rsdp-128-fast"
 
@@ -103,6 +105,7 @@ public enum CrossRSDP128Fast: Sendable {
     }
 }
 
+/// CROSS RSDP-128-small digital signatures.
 public enum CrossRSDP128Small: Sendable {
     static let algorithmName = "cross-rsdp-128-small"
 
@@ -154,6 +157,7 @@ public enum CrossRSDP128Small: Sendable {
     }
 }
 
+/// CROSS RSDP-192-balanced digital signatures.
 public enum CrossRSDP192Balanced: Sendable {
     static let algorithmName = "cross-rsdp-192-balanced"
 
@@ -205,6 +209,7 @@ public enum CrossRSDP192Balanced: Sendable {
     }
 }
 
+/// CROSS RSDP-192-fast digital signatures.
 public enum CrossRSDP192Fast: Sendable {
     static let algorithmName = "cross-rsdp-192-fast"
 
@@ -256,6 +261,7 @@ public enum CrossRSDP192Fast: Sendable {
     }
 }
 
+/// CROSS RSDP-192-small digital signatures.
 public enum CrossRSDP192Small: Sendable {
     static let algorithmName = "cross-rsdp-192-small"
 
@@ -307,6 +313,7 @@ public enum CrossRSDP192Small: Sendable {
     }
 }
 
+/// CROSS RSDP-256-balanced digital signatures.
 public enum CrossRSDP256Balanced: Sendable {
     static let algorithmName = "cross-rsdp-256-balanced"
 
@@ -358,6 +365,7 @@ public enum CrossRSDP256Balanced: Sendable {
     }
 }
 
+/// CROSS RSDP-256-fast digital signatures.
 public enum CrossRSDP256Fast: Sendable {
     static let algorithmName = "cross-rsdp-256-fast"
 
@@ -409,6 +417,7 @@ public enum CrossRSDP256Fast: Sendable {
     }
 }
 
+/// CROSS RSDP-256-small digital signatures.
 public enum CrossRSDP256Small: Sendable {
     static let algorithmName = "cross-rsdp-256-small"
 
@@ -460,6 +469,7 @@ public enum CrossRSDP256Small: Sendable {
     }
 }
 
+/// CROSS RSDPG-128-balanced digital signatures.
 public enum CrossRSDPG128Balanced: Sendable {
     static let algorithmName = "cross-rsdpg-128-balanced"
 
@@ -511,6 +521,7 @@ public enum CrossRSDPG128Balanced: Sendable {
     }
 }
 
+/// CROSS RSDPG-128-fast digital signatures.
 public enum CrossRSDPG128Fast: Sendable {
     static let algorithmName = "cross-rsdpg-128-fast"
 
@@ -562,6 +573,7 @@ public enum CrossRSDPG128Fast: Sendable {
     }
 }
 
+/// CROSS RSDPG-128-small digital signatures.
 public enum CrossRSDPG128Small: Sendable {
     static let algorithmName = "cross-rsdpg-128-small"
 
@@ -613,6 +625,7 @@ public enum CrossRSDPG128Small: Sendable {
     }
 }
 
+/// CROSS RSDPG-192-balanced digital signatures.
 public enum CrossRSDPG192Balanced: Sendable {
     static let algorithmName = "cross-rsdpg-192-balanced"
 
@@ -664,6 +677,7 @@ public enum CrossRSDPG192Balanced: Sendable {
     }
 }
 
+/// CROSS RSDPG-192-fast digital signatures.
 public enum CrossRSDPG192Fast: Sendable {
     static let algorithmName = "cross-rsdpg-192-fast"
 
@@ -715,6 +729,7 @@ public enum CrossRSDPG192Fast: Sendable {
     }
 }
 
+/// CROSS RSDPG-192-small digital signatures.
 public enum CrossRSDPG192Small: Sendable {
     static let algorithmName = "cross-rsdpg-192-small"
 
@@ -766,6 +781,7 @@ public enum CrossRSDPG192Small: Sendable {
     }
 }
 
+/// CROSS RSDPG-256-balanced digital signatures.
 public enum CrossRSDPG256Balanced: Sendable {
     static let algorithmName = "cross-rsdpg-256-balanced"
 
@@ -817,6 +833,7 @@ public enum CrossRSDPG256Balanced: Sendable {
     }
 }
 
+/// CROSS RSDPG-256-fast digital signatures.
 public enum CrossRSDPG256Fast: Sendable {
     static let algorithmName = "cross-rsdpg-256-fast"
 
@@ -868,6 +885,7 @@ public enum CrossRSDPG256Fast: Sendable {
     }
 }
 
+/// CROSS RSDPG-256-small digital signatures.
 public enum CrossRSDPG256Small: Sendable {
     static let algorithmName = "cross-rsdpg-256-small"
 

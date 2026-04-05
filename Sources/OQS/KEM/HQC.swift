@@ -1,6 +1,7 @@
 import Foundation
 internal import Cliboqs
 
+/// HQC-128 key encapsulation.
 public enum HQC128: Sendable {
     static let algorithmName = "HQC-128"
 
@@ -57,6 +58,7 @@ public enum HQC128: Sendable {
     }
 }
 
+/// HQC-192 key encapsulation.
 public enum HQC192: Sendable {
     static let algorithmName = "HQC-192"
 
@@ -113,6 +115,7 @@ public enum HQC192: Sendable {
     }
 }
 
+/// HQC-256 key encapsulation.
 public enum HQC256: Sendable {
     static let algorithmName = "HQC-256"
 

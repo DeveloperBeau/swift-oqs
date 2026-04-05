@@ -1,6 +1,7 @@
 import Foundation
 internal import Cliboqs
 
+/// Falcon-512 digital signatures.
 public enum Falcon512: Sendable {
     static let algorithmName = "Falcon-512"
 
@@ -52,6 +53,7 @@ public enum Falcon512: Sendable {
     }
 }
 
+/// Falcon-1024 digital signatures.
 public enum Falcon1024: Sendable {
     static let algorithmName = "Falcon-1024"
 
@@ -103,6 +105,7 @@ public enum Falcon1024: Sendable {
     }
 }
 
+/// Falcon-padded-512 digital signatures.
 public enum FalconPadded512: Sendable {
     static let algorithmName = "Falcon-padded-512"
 
@@ -154,6 +157,7 @@ public enum FalconPadded512: Sendable {
     }
 }
 
+/// Falcon-padded-1024 digital signatures.
 public enum FalconPadded1024: Sendable {
     static let algorithmName = "Falcon-padded-1024"
 

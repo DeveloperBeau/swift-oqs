@@ -187,6 +187,9 @@ let package = Package(
     products: [
         .library(name: "OQS", targets: ["OQS"]),
     ],
+    dependencies: [
+        .package(url: "https://github.com/swiftlang/swift-docc-plugin", from: "1.4.3"),
+    ],
     targets: [
         .target(
             name: "Cliboqs",

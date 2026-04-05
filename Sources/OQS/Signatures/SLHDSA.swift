@@ -1,6 +1,7 @@
 import Foundation
 internal import Cliboqs
 
+/// SLH-DSA Pure SHA2-128s digital signatures.
 public enum SLHDSAPureSHA2128s: Sendable {
     static let algorithmName = "SLH_DSA_PURE_SHA2_128S"
 
@@ -52,6 +53,7 @@ public enum SLHDSAPureSHA2128s: Sendable {
     }
 }
 
+/// SLH-DSA Pure SHA2-128f digital signatures.
 public enum SLHDSAPureSHA2128f: Sendable {
     static let algorithmName = "SLH_DSA_PURE_SHA2_128F"
 
@@ -103,6 +105,7 @@ public enum SLHDSAPureSHA2128f: Sendable {
     }
 }
 
+/// SLH-DSA Pure SHA2-192s digital signatures.
 public enum SLHDSAPureSHA2192s: Sendable {
     static let algorithmName = "SLH_DSA_PURE_SHA2_192S"
 
@@ -154,6 +157,7 @@ public enum SLHDSAPureSHA2192s: Sendable {
     }
 }
 
+/// SLH-DSA Pure SHA2-192f digital signatures.
 public enum SLHDSAPureSHA2192f: Sendable {
     static let algorithmName = "SLH_DSA_PURE_SHA2_192F"
 
@@ -205,6 +209,7 @@ public enum SLHDSAPureSHA2192f: Sendable {
     }
 }
 
+/// SLH-DSA Pure SHA2-256s digital signatures.
 public enum SLHDSAPureSHA2256s: Sendable {
     static let algorithmName = "SLH_DSA_PURE_SHA2_256S"
 
@@ -256,6 +261,7 @@ public enum SLHDSAPureSHA2256s: Sendable {
     }
 }
 
+/// SLH-DSA Pure SHA2-256f digital signatures.
 public enum SLHDSAPureSHA2256f: Sendable {
     static let algorithmName = "SLH_DSA_PURE_SHA2_256F"
 
@@ -307,6 +313,7 @@ public enum SLHDSAPureSHA2256f: Sendable {
     }
 }
 
+/// SLH-DSA Pure SHAKE-128s digital signatures.
 public enum SLHDSAPureSHAKE128s: Sendable {
     static let algorithmName = "SLH_DSA_PURE_SHAKE_128S"
 
@@ -358,6 +365,7 @@ public enum SLHDSAPureSHAKE128s: Sendable {
     }
 }
 
+/// SLH-DSA Pure SHAKE-128f digital signatures.
 public enum SLHDSAPureSHAKE128f: Sendable {
     static let algorithmName = "SLH_DSA_PURE_SHAKE_128F"
 
@@ -409,6 +417,7 @@ public enum SLHDSAPureSHAKE128f: Sendable {
     }
 }
 
+/// SLH-DSA Pure SHAKE-192s digital signatures.
 public enum SLHDSAPureSHAKE192s: Sendable {
     static let algorithmName = "SLH_DSA_PURE_SHAKE_192S"
 
@@ -460,6 +469,7 @@ public enum SLHDSAPureSHAKE192s: Sendable {
     }
 }
 
+/// SLH-DSA Pure SHAKE-192f digital signatures.
 public enum SLHDSAPureSHAKE192f: Sendable {
     static let algorithmName = "SLH_DSA_PURE_SHAKE_192F"
 
@@ -511,6 +521,7 @@ public enum SLHDSAPureSHAKE192f: Sendable {
     }
 }
 
+/// SLH-DSA Pure SHAKE-256s digital signatures.
 public enum SLHDSAPureSHAKE256s: Sendable {
     static let algorithmName = "SLH_DSA_PURE_SHAKE_256S"
 
@@ -562,6 +573,7 @@ public enum SLHDSAPureSHAKE256s: Sendable {
     }
 }
 
+/// SLH-DSA Pure SHAKE-256f digital signatures.
 public enum SLHDSAPureSHAKE256f: Sendable {
     static let algorithmName = "SLH_DSA_PURE_SHAKE_256F"
 

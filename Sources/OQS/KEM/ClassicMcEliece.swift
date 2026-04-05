@@ -1,6 +1,7 @@
 import Foundation
 internal import Cliboqs
 
+/// Classic McEliece 348864 key encapsulation.
 public enum ClassicMcEliece348864: Sendable {
     static let algorithmName = "Classic-McEliece-348864"
 
@@ -57,6 +58,7 @@ public enum ClassicMcEliece348864: Sendable {
     }
 }
 
+/// Classic McEliece 460896 key encapsulation.
 public enum ClassicMcEliece460896: Sendable {
     static let algorithmName = "Classic-McEliece-460896"
 
@@ -113,6 +115,7 @@ public enum ClassicMcEliece460896: Sendable {
     }
 }
 
+/// Classic McEliece 6688128 key encapsulation.
 public enum ClassicMcEliece6688128: Sendable {
     static let algorithmName = "Classic-McEliece-6688128"
 
@@ -169,6 +172,7 @@ public enum ClassicMcEliece6688128: Sendable {
     }
 }
 
+/// Classic McEliece 6960119 key encapsulation.
 public enum ClassicMcEliece6960119: Sendable {
     static let algorithmName = "Classic-McEliece-6960119"
 
@@ -225,6 +229,7 @@ public enum ClassicMcEliece6960119: Sendable {
     }
 }
 
+/// Classic McEliece 8192128 key encapsulation.
 public enum ClassicMcEliece8192128: Sendable {
     static let algorithmName = "Classic-McEliece-8192128"
 
