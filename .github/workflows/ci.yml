@@ -16,6 +16,15 @@ jobs:
     runs-on: macos-15
     steps:
       - uses: actions/checkout@v4
+      - name: Install Swift 6.3
+        run: |
+          # Use swiftly to install Swift 6.3 if not available
+          if ! swift --version 2>&1 | grep -q "6.3"; then
+            curl -L https://swift.org/install.sh | bash -s -- --swift-version 6.3
+            export PATH="$HOME/.local/share/swiftly/toolchains/swift-6.3-release/usr/bin:$PATH"
+            echo "$HOME/.local/share/swiftly/toolchains/swift-6.3-release/usr/bin" >> $GITHUB_PATH
+          fi
+          swift --version
       - name: Build
         run: swift build -v
       - name: Test
@@ -25,9 +34,11 @@ jobs:
     name: Linux
     runs-on: ubuntu-24.04
     container:
-      image: swift:6.1
+      image: swiftlang/swift:nightly-6.3-jammy
     steps:
       - uses: actions/checkout@v4
+      - name: Swift version
+        run: swift --version
       - name: Build
         run: swift build -v
       - name: Test
