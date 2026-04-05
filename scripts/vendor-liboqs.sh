@@ -11,6 +11,13 @@ echo "Vendoring liboqs $VERSION..."
 if [ -d "$DEST/src" ]; then
     rm -rf "$DEST/src"
 fi
+# Preserve oqsconfig.h (manually maintained) across re-vendoring
+if [ -f "$DEST/include/oqs/oqsconfig.h" ]; then
+    cp "$DEST/include/oqs/oqsconfig.h" "$DEST/include/oqsconfig.h.bak"
+fi
+if [ -d "$DEST/include/oqs" ]; then
+    rm -rf "$DEST/include/oqs"
+fi
 
 TMPDIR=$(mktemp -d)
 TARBALL="$TMPDIR/liboqs-$VERSION.tar.gz"
@@ -22,17 +29,47 @@ mkdir -p "$DEST/src"
 cp -R "$LIBOQS_SRC/common" "$DEST/src/"
 cp -R "$LIBOQS_SRC/kem" "$DEST/src/"
 cp -R "$LIBOQS_SRC/sig" "$DEST/src/"
+cp -R "$LIBOQS_SRC/sig_stfl" "$DEST/src/"
 
 mkdir -p "$DEST/include/oqs"
-for header in oqs.h common.h rand.h aes.h sha2.h sha3.h sha3x4.h kem.h sig.h; do
-    if [ -f "$LIBOQS_SRC/oqs/$header" ]; then
-        cp "$LIBOQS_SRC/oqs/$header" "$DEST/include/oqs/"
-    fi
+
+# Core public headers
+cp "$LIBOQS_SRC/oqs.h" "$DEST/include/oqs/"
+cp "$LIBOQS_SRC/common/common.h" "$DEST/include/oqs/"
+cp "$LIBOQS_SRC/common/rand/rand.h" "$DEST/include/oqs/"
+cp "$LIBOQS_SRC/common/rand/rand_nist.h" "$DEST/include/oqs/" 2>/dev/null || true
+cp "$LIBOQS_SRC/kem/kem.h" "$DEST/include/oqs/"
+cp "$LIBOQS_SRC/sig/sig.h" "$DEST/include/oqs/"
+cp "$LIBOQS_SRC/sig_stfl/sig_stfl.h" "$DEST/include/oqs/"
+cp "$LIBOQS_SRC/sig_stfl/xmss/sig_stfl_xmss.h" "$DEST/include/oqs/"
+cp "$LIBOQS_SRC/sig_stfl/lms/sig_stfl_lms.h" "$DEST/include/oqs/"
+cp "$LIBOQS_SRC/common/aes/aes_ops.h" "$DEST/include/oqs/"
+cp "$LIBOQS_SRC/common/aes/aes.h" "$DEST/include/oqs/"
+cp "$LIBOQS_SRC/common/sha2/sha2_ops.h" "$DEST/include/oqs/"
+cp "$LIBOQS_SRC/common/sha2/sha2.h" "$DEST/include/oqs/"
+cp "$LIBOQS_SRC/common/sha3/sha3_ops.h" "$DEST/include/oqs/"
+cp "$LIBOQS_SRC/common/sha3/sha3.h" "$DEST/include/oqs/"
+cp "$LIBOQS_SRC/common/sha3/sha3x4_ops.h" "$DEST/include/oqs/"
+cp "$LIBOQS_SRC/common/sha3/sha3x4.h" "$DEST/include/oqs/"
+
+# Per-algorithm public headers (kem_*.h, sig_*.h at algorithm directory level)
+for dir in "$LIBOQS_SRC"/kem/*/; do
+    for h in "$dir"kem_*.h; do
+        [ -f "$h" ] && cp "$h" "$DEST/include/oqs/"
+    done
+done
+for dir in "$LIBOQS_SRC"/sig/*/; do
+    for h in "$dir"sig_*.h; do
+        [ -f "$h" ] && cp "$h" "$DEST/include/oqs/"
+    done
 done
 
-cp "$LIBOQS_SRC/kem/kem.h" "$DEST/src/kem/" 2>/dev/null || true
-cp "$LIBOQS_SRC/sig/sig.h" "$DEST/src/sig/" 2>/dev/null || true
-
 rm -rf "$TMPDIR"
+
+# Restore oqsconfig.h
+if [ -f "$DEST/include/oqsconfig.h.bak" ]; then
+    cp "$DEST/include/oqsconfig.h.bak" "$DEST/include/oqs/oqsconfig.h"
+    rm "$DEST/include/oqsconfig.h.bak"
+fi
 
 echo "Done. Vendored liboqs $VERSION into $DEST"

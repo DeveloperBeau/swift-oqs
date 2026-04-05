@@ -1,0 +1,303 @@
+// SPDX-License-Identifier: MIT
+// Generated for swift-oqs vendored build of liboqs 0.15.0
+// Portable-only build: no platform-specific optimized variants.
+
+#ifndef OQS_OQSCONFIG_H
+#define OQS_OQSCONFIG_H
+
+#define OQS_VERSION_TEXT "0.15.0"
+#define OQS_VERSION_MAJOR 0
+#define OQS_VERSION_MINOR 15
+#define OQS_VERSION_PATCH 0
+
+#define OQS_COMPILE_BUILD_TARGET "generic"
+#define OQS_DIST_BUILD 1
+#define OQS_BUILD_ONLY_LIB 1
+
+// No OpenSSL, no pthreads, no GPU
+#define OQS_USE_CUPQC 0
+#define OQS_USE_ICICLE 0
+#define OQS_LIBJADE_BUILD 0
+
+// --- KEM algorithms (portable/reference only) ---
+
+#define OQS_ENABLE_KEM_BIKE 1
+#define OQS_ENABLE_KEM_bike_l1 1
+#define OQS_ENABLE_KEM_bike_l3 1
+#define OQS_ENABLE_KEM_bike_l5 1
+
+#define OQS_ENABLE_KEM_FRODOKEM 1
+#define OQS_ENABLE_KEM_frodokem_640_aes 1
+#define OQS_ENABLE_KEM_frodokem_640_shake 1
+#define OQS_ENABLE_KEM_frodokem_976_aes 1
+#define OQS_ENABLE_KEM_frodokem_976_shake 1
+#define OQS_ENABLE_KEM_frodokem_1344_aes 1
+#define OQS_ENABLE_KEM_frodokem_1344_shake 1
+
+#define OQS_ENABLE_KEM_NTRUPRIME 1
+#define OQS_ENABLE_KEM_ntruprime_sntrup761 1
+
+#define OQS_ENABLE_KEM_NTRU 1
+#define OQS_ENABLE_KEM_ntru_hps2048509 1
+#define OQS_ENABLE_KEM_ntru_hps2048677 1
+#define OQS_ENABLE_KEM_ntru_hps4096821 1
+#define OQS_ENABLE_KEM_ntru_hps40961229 1
+#define OQS_ENABLE_KEM_ntru_hrss701 1
+#define OQS_ENABLE_KEM_ntru_hrss1373 1
+
+#define OQS_ENABLE_KEM_CLASSIC_MCELIECE 1
+#define OQS_ENABLE_KEM_classic_mceliece_348864 1
+#define OQS_ENABLE_KEM_classic_mceliece_348864f 1
+#define OQS_ENABLE_KEM_classic_mceliece_460896 1
+#define OQS_ENABLE_KEM_classic_mceliece_460896f 1
+#define OQS_ENABLE_KEM_classic_mceliece_6688128 1
+#define OQS_ENABLE_KEM_classic_mceliece_6688128f 1
+#define OQS_ENABLE_KEM_classic_mceliece_6960119 1
+#define OQS_ENABLE_KEM_classic_mceliece_6960119f 1
+#define OQS_ENABLE_KEM_classic_mceliece_8192128 1
+#define OQS_ENABLE_KEM_classic_mceliece_8192128f 1
+
+#define OQS_ENABLE_KEM_HQC 1
+#define OQS_ENABLE_KEM_hqc_128 1
+#define OQS_ENABLE_KEM_hqc_192 1
+#define OQS_ENABLE_KEM_hqc_256 1
+
+#define OQS_ENABLE_KEM_KYBER 1
+#define OQS_ENABLE_KEM_kyber_512 1
+#define OQS_ENABLE_KEM_kyber_768 1
+#define OQS_ENABLE_KEM_kyber_1024 1
+
+#define OQS_ENABLE_KEM_ML_KEM 1
+#define OQS_ENABLE_KEM_ml_kem_512 1
+#define OQS_ENABLE_KEM_ml_kem_768 1
+#define OQS_ENABLE_KEM_ml_kem_1024 1
+
+// --- SIG algorithms (portable/reference only) ---
+
+#define OQS_ENABLE_SIG_ML_DSA 1
+#define OQS_ENABLE_SIG_ml_dsa_44 1
+#define OQS_ENABLE_SIG_ml_dsa_65 1
+#define OQS_ENABLE_SIG_ml_dsa_87 1
+
+#define OQS_ENABLE_SIG_FALCON 1
+#define OQS_ENABLE_SIG_falcon_512 1
+#define OQS_ENABLE_SIG_falcon_1024 1
+#define OQS_ENABLE_SIG_falcon_padded_512 1
+#define OQS_ENABLE_SIG_falcon_padded_1024 1
+
+#define OQS_ENABLE_SIG_SPHINCS 1
+#define OQS_ENABLE_SIG_sphincs_sha2_128f_simple 1
+#define OQS_ENABLE_SIG_sphincs_sha2_128s_simple 1
+#define OQS_ENABLE_SIG_sphincs_sha2_192f_simple 1
+#define OQS_ENABLE_SIG_sphincs_sha2_192s_simple 1
+#define OQS_ENABLE_SIG_sphincs_sha2_256f_simple 1
+#define OQS_ENABLE_SIG_sphincs_sha2_256s_simple 1
+#define OQS_ENABLE_SIG_sphincs_shake_128f_simple 1
+#define OQS_ENABLE_SIG_sphincs_shake_128s_simple 1
+#define OQS_ENABLE_SIG_sphincs_shake_192f_simple 1
+#define OQS_ENABLE_SIG_sphincs_shake_192s_simple 1
+#define OQS_ENABLE_SIG_sphincs_shake_256f_simple 1
+#define OQS_ENABLE_SIG_sphincs_shake_256s_simple 1
+
+// MAYO disabled: each variant requires different compile-time parameters,
+// incompatible with SPM's single-flags-per-target model.
+// #define OQS_ENABLE_SIG_MAYO 1
+
+#define OQS_ENABLE_SIG_CROSS 1
+#define OQS_ENABLE_SIG_cross_rsdp_128_balanced 1
+#define OQS_ENABLE_SIG_cross_rsdp_128_fast 1
+#define OQS_ENABLE_SIG_cross_rsdp_128_small 1
+#define OQS_ENABLE_SIG_cross_rsdp_192_balanced 1
+#define OQS_ENABLE_SIG_cross_rsdp_192_fast 1
+#define OQS_ENABLE_SIG_cross_rsdp_192_small 1
+#define OQS_ENABLE_SIG_cross_rsdp_256_balanced 1
+#define OQS_ENABLE_SIG_cross_rsdp_256_fast 1
+#define OQS_ENABLE_SIG_cross_rsdp_256_small 1
+#define OQS_ENABLE_SIG_cross_rsdpg_128_balanced 1
+#define OQS_ENABLE_SIG_cross_rsdpg_128_fast 1
+#define OQS_ENABLE_SIG_cross_rsdpg_128_small 1
+#define OQS_ENABLE_SIG_cross_rsdpg_192_balanced 1
+#define OQS_ENABLE_SIG_cross_rsdpg_192_fast 1
+#define OQS_ENABLE_SIG_cross_rsdpg_192_small 1
+#define OQS_ENABLE_SIG_cross_rsdpg_256_balanced 1
+#define OQS_ENABLE_SIG_cross_rsdpg_256_fast 1
+#define OQS_ENABLE_SIG_cross_rsdpg_256_small 1
+
+// UOV disabled: requires OpenSSL
+// #define OQS_ENABLE_SIG_UOV 1
+
+#define OQS_ENABLE_SIG_SNOVA 1
+#define OQS_ENABLE_SIG_snova_SNOVA_24_5_4 1
+#define OQS_ENABLE_SIG_snova_SNOVA_24_5_4_SHAKE 1
+#define OQS_ENABLE_SIG_snova_SNOVA_24_5_4_esk 1
+#define OQS_ENABLE_SIG_snova_SNOVA_24_5_4_SHAKE_esk 1
+#define OQS_ENABLE_SIG_snova_SNOVA_37_17_2 1
+#define OQS_ENABLE_SIG_snova_SNOVA_25_8_3 1
+#define OQS_ENABLE_SIG_snova_SNOVA_56_25_2 1
+#define OQS_ENABLE_SIG_snova_SNOVA_49_11_3 1
+#define OQS_ENABLE_SIG_snova_SNOVA_37_8_4 1
+#define OQS_ENABLE_SIG_snova_SNOVA_24_5_5 1
+#define OQS_ENABLE_SIG_snova_SNOVA_60_10_4 1
+#define OQS_ENABLE_SIG_snova_SNOVA_29_6_5 1
+
+#define OQS_ENABLE_SIG_SLH_DSA 1
+#define OQS_ENABLE_SIG_slh_dsa_pure_sha2_128s 1
+#define OQS_ENABLE_SIG_slh_dsa_pure_sha2_128f 1
+#define OQS_ENABLE_SIG_slh_dsa_pure_sha2_192s 1
+#define OQS_ENABLE_SIG_slh_dsa_pure_sha2_192f 1
+#define OQS_ENABLE_SIG_slh_dsa_pure_sha2_256s 1
+#define OQS_ENABLE_SIG_slh_dsa_pure_sha2_256f 1
+#define OQS_ENABLE_SIG_slh_dsa_pure_shake_128s 1
+#define OQS_ENABLE_SIG_slh_dsa_pure_shake_128f 1
+#define OQS_ENABLE_SIG_slh_dsa_pure_shake_192s 1
+#define OQS_ENABLE_SIG_slh_dsa_pure_shake_192f 1
+#define OQS_ENABLE_SIG_slh_dsa_pure_shake_256s 1
+#define OQS_ENABLE_SIG_slh_dsa_pure_shake_256f 1
+#define OQS_ENABLE_SIG_slh_dsa_sha2_224_prehash_sha2_128s 1
+#define OQS_ENABLE_SIG_slh_dsa_sha2_224_prehash_sha2_128f 1
+#define OQS_ENABLE_SIG_slh_dsa_sha2_224_prehash_sha2_192s 1
+#define OQS_ENABLE_SIG_slh_dsa_sha2_224_prehash_sha2_192f 1
+#define OQS_ENABLE_SIG_slh_dsa_sha2_224_prehash_sha2_256s 1
+#define OQS_ENABLE_SIG_slh_dsa_sha2_224_prehash_sha2_256f 1
+#define OQS_ENABLE_SIG_slh_dsa_sha2_224_prehash_shake_128s 1
+#define OQS_ENABLE_SIG_slh_dsa_sha2_224_prehash_shake_128f 1
+#define OQS_ENABLE_SIG_slh_dsa_sha2_224_prehash_shake_192s 1
+#define OQS_ENABLE_SIG_slh_dsa_sha2_224_prehash_shake_192f 1
+#define OQS_ENABLE_SIG_slh_dsa_sha2_224_prehash_shake_256s 1
+#define OQS_ENABLE_SIG_slh_dsa_sha2_224_prehash_shake_256f 1
+#define OQS_ENABLE_SIG_slh_dsa_sha2_256_prehash_sha2_128s 1
+#define OQS_ENABLE_SIG_slh_dsa_sha2_256_prehash_sha2_128f 1
+#define OQS_ENABLE_SIG_slh_dsa_sha2_256_prehash_sha2_192s 1
+#define OQS_ENABLE_SIG_slh_dsa_sha2_256_prehash_sha2_192f 1
+#define OQS_ENABLE_SIG_slh_dsa_sha2_256_prehash_sha2_256s 1
+#define OQS_ENABLE_SIG_slh_dsa_sha2_256_prehash_sha2_256f 1
+#define OQS_ENABLE_SIG_slh_dsa_sha2_256_prehash_shake_128s 1
+#define OQS_ENABLE_SIG_slh_dsa_sha2_256_prehash_shake_128f 1
+#define OQS_ENABLE_SIG_slh_dsa_sha2_256_prehash_shake_192s 1
+#define OQS_ENABLE_SIG_slh_dsa_sha2_256_prehash_shake_192f 1
+#define OQS_ENABLE_SIG_slh_dsa_sha2_256_prehash_shake_256s 1
+#define OQS_ENABLE_SIG_slh_dsa_sha2_256_prehash_shake_256f 1
+#define OQS_ENABLE_SIG_slh_dsa_sha2_384_prehash_sha2_128s 1
+#define OQS_ENABLE_SIG_slh_dsa_sha2_384_prehash_sha2_128f 1
+#define OQS_ENABLE_SIG_slh_dsa_sha2_384_prehash_sha2_192s 1
+#define OQS_ENABLE_SIG_slh_dsa_sha2_384_prehash_sha2_192f 1
+#define OQS_ENABLE_SIG_slh_dsa_sha2_384_prehash_sha2_256s 1
+#define OQS_ENABLE_SIG_slh_dsa_sha2_384_prehash_sha2_256f 1
+#define OQS_ENABLE_SIG_slh_dsa_sha2_384_prehash_shake_128s 1
+#define OQS_ENABLE_SIG_slh_dsa_sha2_384_prehash_shake_128f 1
+#define OQS_ENABLE_SIG_slh_dsa_sha2_384_prehash_shake_192s 1
+#define OQS_ENABLE_SIG_slh_dsa_sha2_384_prehash_shake_192f 1
+#define OQS_ENABLE_SIG_slh_dsa_sha2_384_prehash_shake_256s 1
+#define OQS_ENABLE_SIG_slh_dsa_sha2_384_prehash_shake_256f 1
+#define OQS_ENABLE_SIG_slh_dsa_sha2_512_prehash_sha2_128s 1
+#define OQS_ENABLE_SIG_slh_dsa_sha2_512_prehash_sha2_128f 1
+#define OQS_ENABLE_SIG_slh_dsa_sha2_512_prehash_sha2_192s 1
+#define OQS_ENABLE_SIG_slh_dsa_sha2_512_prehash_sha2_192f 1
+#define OQS_ENABLE_SIG_slh_dsa_sha2_512_prehash_sha2_256s 1
+#define OQS_ENABLE_SIG_slh_dsa_sha2_512_prehash_sha2_256f 1
+#define OQS_ENABLE_SIG_slh_dsa_sha2_512_prehash_shake_128s 1
+#define OQS_ENABLE_SIG_slh_dsa_sha2_512_prehash_shake_128f 1
+#define OQS_ENABLE_SIG_slh_dsa_sha2_512_prehash_shake_192s 1
+#define OQS_ENABLE_SIG_slh_dsa_sha2_512_prehash_shake_192f 1
+#define OQS_ENABLE_SIG_slh_dsa_sha2_512_prehash_shake_256s 1
+#define OQS_ENABLE_SIG_slh_dsa_sha2_512_prehash_shake_256f 1
+#define OQS_ENABLE_SIG_slh_dsa_sha2_512_224_prehash_sha2_128s 1
+#define OQS_ENABLE_SIG_slh_dsa_sha2_512_224_prehash_sha2_128f 1
+#define OQS_ENABLE_SIG_slh_dsa_sha2_512_224_prehash_sha2_192s 1
+#define OQS_ENABLE_SIG_slh_dsa_sha2_512_224_prehash_sha2_192f 1
+#define OQS_ENABLE_SIG_slh_dsa_sha2_512_224_prehash_sha2_256s 1
+#define OQS_ENABLE_SIG_slh_dsa_sha2_512_224_prehash_sha2_256f 1
+#define OQS_ENABLE_SIG_slh_dsa_sha2_512_224_prehash_shake_128s 1
+#define OQS_ENABLE_SIG_slh_dsa_sha2_512_224_prehash_shake_128f 1
+#define OQS_ENABLE_SIG_slh_dsa_sha2_512_224_prehash_shake_192s 1
+#define OQS_ENABLE_SIG_slh_dsa_sha2_512_224_prehash_shake_192f 1
+#define OQS_ENABLE_SIG_slh_dsa_sha2_512_224_prehash_shake_256s 1
+#define OQS_ENABLE_SIG_slh_dsa_sha2_512_224_prehash_shake_256f 1
+#define OQS_ENABLE_SIG_slh_dsa_sha2_512_256_prehash_sha2_128s 1
+#define OQS_ENABLE_SIG_slh_dsa_sha2_512_256_prehash_sha2_128f 1
+#define OQS_ENABLE_SIG_slh_dsa_sha2_512_256_prehash_sha2_192s 1
+#define OQS_ENABLE_SIG_slh_dsa_sha2_512_256_prehash_sha2_192f 1
+#define OQS_ENABLE_SIG_slh_dsa_sha2_512_256_prehash_sha2_256s 1
+#define OQS_ENABLE_SIG_slh_dsa_sha2_512_256_prehash_sha2_256f 1
+#define OQS_ENABLE_SIG_slh_dsa_sha2_512_256_prehash_shake_128s 1
+#define OQS_ENABLE_SIG_slh_dsa_sha2_512_256_prehash_shake_128f 1
+#define OQS_ENABLE_SIG_slh_dsa_sha2_512_256_prehash_shake_192s 1
+#define OQS_ENABLE_SIG_slh_dsa_sha2_512_256_prehash_shake_192f 1
+#define OQS_ENABLE_SIG_slh_dsa_sha2_512_256_prehash_shake_256s 1
+#define OQS_ENABLE_SIG_slh_dsa_sha2_512_256_prehash_shake_256f 1
+#define OQS_ENABLE_SIG_slh_dsa_sha3_224_prehash_sha2_128s 1
+#define OQS_ENABLE_SIG_slh_dsa_sha3_224_prehash_sha2_128f 1
+#define OQS_ENABLE_SIG_slh_dsa_sha3_224_prehash_sha2_192s 1
+#define OQS_ENABLE_SIG_slh_dsa_sha3_224_prehash_sha2_192f 1
+#define OQS_ENABLE_SIG_slh_dsa_sha3_224_prehash_sha2_256s 1
+#define OQS_ENABLE_SIG_slh_dsa_sha3_224_prehash_sha2_256f 1
+#define OQS_ENABLE_SIG_slh_dsa_sha3_224_prehash_shake_128s 1
+#define OQS_ENABLE_SIG_slh_dsa_sha3_224_prehash_shake_128f 1
+#define OQS_ENABLE_SIG_slh_dsa_sha3_224_prehash_shake_192s 1
+#define OQS_ENABLE_SIG_slh_dsa_sha3_224_prehash_shake_192f 1
+#define OQS_ENABLE_SIG_slh_dsa_sha3_224_prehash_shake_256s 1
+#define OQS_ENABLE_SIG_slh_dsa_sha3_224_prehash_shake_256f 1
+#define OQS_ENABLE_SIG_slh_dsa_sha3_256_prehash_sha2_128s 1
+#define OQS_ENABLE_SIG_slh_dsa_sha3_256_prehash_sha2_128f 1
+#define OQS_ENABLE_SIG_slh_dsa_sha3_256_prehash_sha2_192s 1
+#define OQS_ENABLE_SIG_slh_dsa_sha3_256_prehash_sha2_192f 1
+#define OQS_ENABLE_SIG_slh_dsa_sha3_256_prehash_sha2_256s 1
+#define OQS_ENABLE_SIG_slh_dsa_sha3_256_prehash_sha2_256f 1
+#define OQS_ENABLE_SIG_slh_dsa_sha3_256_prehash_shake_128s 1
+#define OQS_ENABLE_SIG_slh_dsa_sha3_256_prehash_shake_128f 1
+#define OQS_ENABLE_SIG_slh_dsa_sha3_256_prehash_shake_192s 1
+#define OQS_ENABLE_SIG_slh_dsa_sha3_256_prehash_shake_192f 1
+#define OQS_ENABLE_SIG_slh_dsa_sha3_256_prehash_shake_256s 1
+#define OQS_ENABLE_SIG_slh_dsa_sha3_256_prehash_shake_256f 1
+#define OQS_ENABLE_SIG_slh_dsa_sha3_384_prehash_sha2_128s 1
+#define OQS_ENABLE_SIG_slh_dsa_sha3_384_prehash_sha2_128f 1
+#define OQS_ENABLE_SIG_slh_dsa_sha3_384_prehash_sha2_192s 1
+#define OQS_ENABLE_SIG_slh_dsa_sha3_384_prehash_sha2_192f 1
+#define OQS_ENABLE_SIG_slh_dsa_sha3_384_prehash_sha2_256s 1
+#define OQS_ENABLE_SIG_slh_dsa_sha3_384_prehash_sha2_256f 1
+#define OQS_ENABLE_SIG_slh_dsa_sha3_384_prehash_shake_128s 1
+#define OQS_ENABLE_SIG_slh_dsa_sha3_384_prehash_shake_128f 1
+#define OQS_ENABLE_SIG_slh_dsa_sha3_384_prehash_shake_192s 1
+#define OQS_ENABLE_SIG_slh_dsa_sha3_384_prehash_shake_192f 1
+#define OQS_ENABLE_SIG_slh_dsa_sha3_384_prehash_shake_256s 1
+#define OQS_ENABLE_SIG_slh_dsa_sha3_384_prehash_shake_256f 1
+#define OQS_ENABLE_SIG_slh_dsa_sha3_512_prehash_sha2_128s 1
+#define OQS_ENABLE_SIG_slh_dsa_sha3_512_prehash_sha2_128f 1
+#define OQS_ENABLE_SIG_slh_dsa_sha3_512_prehash_sha2_192s 1
+#define OQS_ENABLE_SIG_slh_dsa_sha3_512_prehash_sha2_192f 1
+#define OQS_ENABLE_SIG_slh_dsa_sha3_512_prehash_sha2_256s 1
+#define OQS_ENABLE_SIG_slh_dsa_sha3_512_prehash_sha2_256f 1
+#define OQS_ENABLE_SIG_slh_dsa_sha3_512_prehash_shake_128s 1
+#define OQS_ENABLE_SIG_slh_dsa_sha3_512_prehash_shake_128f 1
+#define OQS_ENABLE_SIG_slh_dsa_sha3_512_prehash_shake_192s 1
+#define OQS_ENABLE_SIG_slh_dsa_sha3_512_prehash_shake_192f 1
+#define OQS_ENABLE_SIG_slh_dsa_sha3_512_prehash_shake_256s 1
+#define OQS_ENABLE_SIG_slh_dsa_sha3_512_prehash_shake_256f 1
+#define OQS_ENABLE_SIG_slh_dsa_shake_128_prehash_sha2_128s 1
+#define OQS_ENABLE_SIG_slh_dsa_shake_128_prehash_sha2_128f 1
+#define OQS_ENABLE_SIG_slh_dsa_shake_128_prehash_sha2_192s 1
+#define OQS_ENABLE_SIG_slh_dsa_shake_128_prehash_sha2_192f 1
+#define OQS_ENABLE_SIG_slh_dsa_shake_128_prehash_sha2_256s 1
+#define OQS_ENABLE_SIG_slh_dsa_shake_128_prehash_sha2_256f 1
+#define OQS_ENABLE_SIG_slh_dsa_shake_128_prehash_shake_128s 1
+#define OQS_ENABLE_SIG_slh_dsa_shake_128_prehash_shake_128f 1
+#define OQS_ENABLE_SIG_slh_dsa_shake_128_prehash_shake_192s 1
+#define OQS_ENABLE_SIG_slh_dsa_shake_128_prehash_shake_192f 1
+#define OQS_ENABLE_SIG_slh_dsa_shake_128_prehash_shake_256s 1
+#define OQS_ENABLE_SIG_slh_dsa_shake_128_prehash_shake_256f 1
+#define OQS_ENABLE_SIG_slh_dsa_shake_256_prehash_sha2_128s 1
+#define OQS_ENABLE_SIG_slh_dsa_shake_256_prehash_sha2_128f 1
+#define OQS_ENABLE_SIG_slh_dsa_shake_256_prehash_sha2_192s 1
+#define OQS_ENABLE_SIG_slh_dsa_shake_256_prehash_sha2_192f 1
+#define OQS_ENABLE_SIG_slh_dsa_shake_256_prehash_sha2_256s 1
+#define OQS_ENABLE_SIG_slh_dsa_shake_256_prehash_sha2_256f 1
+#define OQS_ENABLE_SIG_slh_dsa_shake_256_prehash_shake_128s 1
+#define OQS_ENABLE_SIG_slh_dsa_shake_256_prehash_shake_128f 1
+#define OQS_ENABLE_SIG_slh_dsa_shake_256_prehash_shake_192s 1
+#define OQS_ENABLE_SIG_slh_dsa_shake_256_prehash_shake_192f 1
+#define OQS_ENABLE_SIG_slh_dsa_shake_256_prehash_shake_256s 1
+#define OQS_ENABLE_SIG_slh_dsa_shake_256_prehash_shake_256f 1
+
+// Stateful signatures disabled (require stateful key management)
+
+#endif // OQS_OQSCONFIG_H
