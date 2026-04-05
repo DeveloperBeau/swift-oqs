@@ -34,7 +34,7 @@ jobs:
     name: Linux
     runs-on: ubuntu-24.04
     container:
-      image: swiftlang/swift:nightly-6.3-jammy
+      image: swift:6.3
     steps:
       - uses: actions/checkout@v4
       - name: Swift version
