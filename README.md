@@ -43,7 +43,13 @@ let privateKey = try MLKEM768.PrivateKey()
 let result = try privateKey.publicKey.generateSharedSecret()
 let secret = try privateKey.decryptSharedSecret(result.ciphertext)
 assert(secret == result.sharedSecret)
+
+// Use the shared secret for symmetric encryption
+let symmetricKey = SymmetricKey(data: secret.rawRepresentation)
+let encrypted = try AES.GCM.seal(plaintext, using: symmetricKey)
 ```
+
+The shared secret can be used directly as a symmetric key, or fed into a key derivation function (like HKDF) to produce multiple keys for different purposes.
 
 ### Digital Signatures
 
