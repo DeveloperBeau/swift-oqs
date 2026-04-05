@@ -124,6 +124,12 @@ let cliboqsExclude: [String] = [
     "src/sig/snova/snova_SNOVA_49_11_3_neon",
     "src/sig/snova/snova_SNOVA_56_25_2_neon",
     "src/sig/snova/snova_SNOVA_60_10_4_neon",
+    // SNOVA disabled in oqsconfig.h (duplicate filenames)
+    "src/sig/snova",
+
+    // ML-DSA disabled in oqsconfig.h (duplicate filenames)
+    "src/sig/ml_dsa",
+
     // UOV (requires OpenSSL, disabled)
     "src/sig/uov",
 
@@ -138,17 +144,8 @@ let cliboqsExclude: [String] = [
     "src/kem/ml_kem/icicle_ml-kem-768_icicle_cuda",
     "src/kem/ml_kem/icicle_ml-kem-1024_icicle_cuda",
 
-    // BIKE AVX2/AVX512 files (not in separate directories)
-    "src/kem/bike/additional_r4/decode_avx2.c",
-    "src/kem/bike/additional_r4/decode_avx512.c",
-    "src/kem/bike/additional_r4/gf2x_ksqr_avx2.c",
-    "src/kem/bike/additional_r4/gf2x_ksqr_avx512.c",
-    "src/kem/bike/additional_r4/gf2x_mul_avx2.c",
-    "src/kem/bike/additional_r4/gf2x_mul_avx512.c",
-    "src/kem/bike/additional_r4/sampling_avx2.c",
-    "src/kem/bike/additional_r4/sampling_avx512.c",
-    "src/kem/bike/additional_r4/gf2x_mul_base_vpclmul.c",
-    "src/kem/bike/additional_r4/gf2x_mul_base_pclmul.c",
+    // BIKE disabled in oqsconfig.h (per-level compile defs)
+    "src/kem/bike",
 
     // FrodoKEM: files that are textually #included by other .c files
     "src/kem/frodokem/external/noise.c",
@@ -169,12 +166,11 @@ let cliboqsExclude: [String] = [
     "src/kem/frodokem/external/frodo1344aes_avx2.c",
     "src/kem/frodokem/external/frodo1344shake_avx2.c",
 
+    // Kyber disabled in oqsconfig.h (deprecated, duplicate filenames)
+    "src/kem/kyber",
+
     // Libjade
     "src/common/libjade_shims",
-    "src/kem/kyber/libjade_kyber512_avx2",
-    "src/kem/kyber/libjade_kyber512_ref",
-    "src/kem/kyber/libjade_kyber768_avx2",
-    "src/kem/kyber/libjade_kyber768_ref",
 
     // Stateful signatures (disabled)
     "src/sig_stfl",

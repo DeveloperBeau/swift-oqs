@@ -21,10 +21,9 @@
 
 // --- KEM algorithms (portable/reference only) ---
 
-#define OQS_ENABLE_KEM_BIKE 1
-#define OQS_ENABLE_KEM_bike_l1 1
-#define OQS_ENABLE_KEM_bike_l3 1
-#define OQS_ENABLE_KEM_bike_l5 1
+// BIKE disabled: each level requires different compile-time LEVEL and
+// FUNC_PREFIX definitions, incompatible with SPM.
+// #define OQS_ENABLE_KEM_BIKE 1
 
 #define OQS_ENABLE_KEM_FRODOKEM 1
 #define OQS_ENABLE_KEM_frodokem_640_aes 1
@@ -62,10 +61,9 @@
 #define OQS_ENABLE_KEM_hqc_192 1
 #define OQS_ENABLE_KEM_hqc_256 1
 
-#define OQS_ENABLE_KEM_KYBER 1
-#define OQS_ENABLE_KEM_kyber_512 1
-#define OQS_ENABLE_KEM_kyber_768 1
-#define OQS_ENABLE_KEM_kyber_1024 1
+// Kyber disabled: deprecated (replaced by ML-KEM) and ref dirs have
+// duplicate filenames incompatible with SPM.
+// #define OQS_ENABLE_KEM_KYBER 1
 
 #define OQS_ENABLE_KEM_ML_KEM 1
 #define OQS_ENABLE_KEM_ml_kem_512 1
@@ -74,10 +72,8 @@
 
 // --- SIG algorithms (portable/reference only) ---
 
-#define OQS_ENABLE_SIG_ML_DSA 1
-#define OQS_ENABLE_SIG_ml_dsa_44 1
-#define OQS_ENABLE_SIG_ml_dsa_65 1
-#define OQS_ENABLE_SIG_ml_dsa_87 1
+// ML-DSA disabled: ref dirs have duplicate filenames incompatible with SPM.
+// #define OQS_ENABLE_SIG_ML_DSA 1
 
 #define OQS_ENABLE_SIG_FALCON 1
 #define OQS_ENABLE_SIG_falcon_512 1
@@ -126,19 +122,8 @@
 // UOV disabled: requires OpenSSL
 // #define OQS_ENABLE_SIG_UOV 1
 
-#define OQS_ENABLE_SIG_SNOVA 1
-#define OQS_ENABLE_SIG_snova_SNOVA_24_5_4 1
-#define OQS_ENABLE_SIG_snova_SNOVA_24_5_4_SHAKE 1
-#define OQS_ENABLE_SIG_snova_SNOVA_24_5_4_esk 1
-#define OQS_ENABLE_SIG_snova_SNOVA_24_5_4_SHAKE_esk 1
-#define OQS_ENABLE_SIG_snova_SNOVA_37_17_2 1
-#define OQS_ENABLE_SIG_snova_SNOVA_25_8_3 1
-#define OQS_ENABLE_SIG_snova_SNOVA_56_25_2 1
-#define OQS_ENABLE_SIG_snova_SNOVA_49_11_3 1
-#define OQS_ENABLE_SIG_snova_SNOVA_37_8_4 1
-#define OQS_ENABLE_SIG_snova_SNOVA_24_5_5 1
-#define OQS_ENABLE_SIG_snova_SNOVA_60_10_4 1
-#define OQS_ENABLE_SIG_snova_SNOVA_29_6_5 1
+// SNOVA disabled: opt dirs have duplicate filenames incompatible with SPM.
+// #define OQS_ENABLE_SIG_SNOVA 1
 
 #define OQS_ENABLE_SIG_SLH_DSA 1
 #define OQS_ENABLE_SIG_slh_dsa_pure_sha2_128s 1
