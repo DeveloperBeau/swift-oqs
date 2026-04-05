@@ -46,8 +46,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install Swift 6.3
-        run: winget install --id Swift.Toolchain -v 6.3 -e --source winget --accept-source-agreements --accept-package-agreements
+      - name: Install Swift
+        run: |
+          winget install --id Swift.Toolchain -e --source winget --accept-source-agreements --accept-package-agreements
+          # Refresh PATH for this session
+          $env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User")
+          echo ($env:Path -split ';' | Where-Object { $_ -like '*Swift*' }) | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+        shell: pwsh
 
       - name: Swift version
         run: swift --version
