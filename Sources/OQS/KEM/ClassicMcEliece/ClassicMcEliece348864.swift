@@ -5,28 +5,44 @@ internal import Cliboqs
 ///
 /// Classic McEliece 348864 is a conservative, code-based KEM with long-standing security assumptions. It has very large public keys but small ciphertexts, making it suitable when keys can be cached.
 ///
-/// ## Usage
+/// ## Establishing a Shared Secret
+///
+/// Two parties (Alice and Bob) establish a shared secret without transmitting it directly.
+///
+/// **Step 1 — Alice generates a key pair and shares her public key:**
+/// ```swift
+/// let alicePrivateKey = try ClassicMcEliece348864.PrivateKey()
+/// let alicePublicKeyData = alicePrivateKey.publicKey.rawRepresentation
+/// // Send alicePublicKeyData to Bob (this is safe to share publicly)
+/// ```
+///
+/// **Step 2 — Bob receives Alice's public key and encapsulates a shared secret:**
+/// ```swift
+/// let alicePublicKey = try ClassicMcEliece348864.PublicKey(rawRepresentation: alicePublicKeyData)
+/// let sealed = try alicePublicKey.encapsulate()
+///
+/// let bobSharedSecret = sealed.sharedSecret
+/// // Send sealed.ciphertext back to Alice (safe to send over any channel)
+/// ```
+///
+/// **Step 3 — Alice decapsulates to recover the same shared secret:**
+/// ```swift
+/// let aliceSharedSecret = try alicePrivateKey.decapsulate(sealed.ciphertext)
+/// // aliceSharedSecret == bobSharedSecret
+/// // Both parties now have identical shared secret bytes for symmetric encryption
+/// ```
+///
+/// ## Saving and Loading Keys
 ///
 /// ```swift
-/// // Generate a key pair
-/// let privateKey = try ClassicMcEliece348864.PrivateKey()
+/// // Save
+/// let privateKeyData = alicePrivateKey.rawRepresentation
+/// let publicKeyData = alicePrivateKey.publicKey.rawRepresentation
 ///
-/// // Encapsulate a shared secret (sender side)
-/// let sealed = try privateKey.publicKey.encapsulate()
-/// // Send sealed.ciphertext to the key holder
-///
-/// // Decapsulate (receiver side)
-/// let secret = try privateKey.decapsulate(sealed.ciphertext)
-/// // secret == sealed.sharedSecret
-///
-/// // Export keys
-/// let keyData = privateKey.rawRepresentation
-/// let pubData = privateKey.publicKey.rawRepresentation
-///
-/// // Import keys
-/// let imported = try ClassicMcEliece348864.PrivateKey(
-///     rawRepresentation: keyData,
-///     publicKeyRepresentation: pubData
+/// // Load
+/// let loaded = try ClassicMcEliece348864.PrivateKey(
+///     rawRepresentation: privateKeyData,
+///     publicKeyRepresentation: publicKeyData
 /// )
 /// ```
 public enum ClassicMcEliece348864: Sendable {

@@ -5,27 +5,40 @@ internal import Cliboqs
 ///
 /// SLH-DSA (FIPS 205) is a NIST standard stateless hash-based signature scheme. This SHAKE-128s variant provides 128-bit security optimized for small signatures.
 ///
-/// ## Usage
+/// ## Signing and Verifying
+///
+/// **Step 1 — Alice generates a signing key and shares her public key:**
+/// ```swift
+/// let aliceSigningKey = try SLHDSAPureSHAKE128s.PrivateKey()
+/// let alicePublicKeyData = aliceSigningKey.publicKey.rawRepresentation
+/// // Share alicePublicKeyData with anyone who needs to verify Alice's signatures
+/// ```
+///
+/// **Step 2 — Alice signs a message:**
+/// ```swift
+/// let message = Data("Transfer $100 to Bob".utf8)
+/// let signature = try aliceSigningKey.signature(for: message)
+/// // Send both message and signature to the verifier
+/// ```
+///
+/// **Step 3 — Bob verifies the signature using Alice's public key:**
+/// ```swift
+/// let alicePublicKey = try SLHDSAPureSHAKE128s.PublicKey(rawRepresentation: alicePublicKeyData)
+/// let isAuthentic = try alicePublicKey.isValidSignature(signature, for: message)
+/// // isAuthentic == true means Alice signed this message
+/// ```
+///
+/// ## Saving and Loading Keys
 ///
 /// ```swift
-/// // Generate a signing key
-/// let signingKey = try SLHDSAPureSHAKE128s.PrivateKey()
+/// // Save
+/// let privateKeyData = aliceSigningKey.rawRepresentation
+/// let publicKeyData = aliceSigningKey.publicKey.rawRepresentation
 ///
-/// // Sign a message
-/// let message = Data("Hello".utf8)
-/// let signature = try signingKey.signature(for: message)
-///
-/// // Verify
-/// let valid = try signingKey.publicKey.isValidSignature(signature, for: message)
-///
-/// // Export keys
-/// let keyData = signingKey.rawRepresentation
-/// let pubData = signingKey.publicKey.rawRepresentation
-///
-/// // Import keys
-/// let imported = try SLHDSAPureSHAKE128s.PrivateKey(
-///     rawRepresentation: keyData,
-///     publicKeyRepresentation: pubData
+/// // Load
+/// let loaded = try SLHDSAPureSHAKE128s.PrivateKey(
+///     rawRepresentation: privateKeyData,
+///     publicKeyRepresentation: publicKeyData
 /// )
 /// ```
 public enum SLHDSAPureSHAKE128s: Sendable {
