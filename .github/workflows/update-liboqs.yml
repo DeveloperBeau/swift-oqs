@@ -1,0 +1,64 @@
+name: Check for liboqs updates
+
+on:
+  schedule:
+    - cron: '0 9 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  check-update:
+    name: Check for new liboqs release
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Get current version
+        id: current
+        run: echo "version=$(cat LIBOQS_VERSION)" >> $GITHUB_OUTPUT
+
+      - name: Get latest liboqs release
+        id: latest
+        run: |
+          LATEST=$(curl -s https://api.github.com/repos/open-quantum-safe/liboqs/releases/latest | jq -r .tag_name)
+          echo "version=$LATEST" >> $GITHUB_OUTPUT
+
+      - name: Compare versions
+        id: compare
+        run: |
+          if [ "${{ steps.current.outputs.version }}" != "${{ steps.latest.outputs.version }}" ]; then
+            echo "update_available=true" >> $GITHUB_OUTPUT
+          else
+            echo "update_available=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Update vendored source
+        if: steps.compare.outputs.update_available == 'true'
+        run: |
+          echo "${{ steps.latest.outputs.version }}" > LIBOQS_VERSION
+          ./scripts/vendor-liboqs.sh
+
+      - name: Build and test
+        if: steps.compare.outputs.update_available == 'true'
+        run: |
+          swift build -v
+          swift test -v
+
+      - name: Create PR
+        if: steps.compare.outputs.update_available == 'true'
+        uses: peter-evans/create-pull-request@v6
+        with:
+          title: "Update liboqs to ${{ steps.latest.outputs.version }}"
+          body: |
+            Automated update of vendored liboqs from `${{ steps.current.outputs.version }}` to `${{ steps.latest.outputs.version }}`.
+
+            - [ ] Verify `oqsconfig.h` covers new algorithms
+            - [ ] Update Swift `Algorithm` enums if needed
+            - [ ] CI passes on macOS and Linux
+
+            [Release notes](https://github.com/open-quantum-safe/liboqs/releases/tag/${{ steps.latest.outputs.version }})
+          branch: update-liboqs-${{ steps.latest.outputs.version }}
+          commit-message: "Update vendored liboqs to ${{ steps.latest.outputs.version }}"
