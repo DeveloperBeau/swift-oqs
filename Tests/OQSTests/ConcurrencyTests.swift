@@ -7,40 +7,36 @@ import Foundation
     @Test("100 concurrent KEM key generations all succeed with unique keys")
     func concurrentKEMKeyGeneration() async throws {
         let keys = try await withThrowingTaskGroup(
-            of: KEM.KeyPair.self,
-            returning: [KEM.KeyPair].self
+            of: MLKEM768.PrivateKey.self,
+            returning: [MLKEM768.PrivateKey].self
         ) { group in
             for _ in 0..<100 {
                 group.addTask {
-                    try KEM.generateKeyPair(algorithm: .mlkem768)
+                    try MLKEM768.PrivateKey()
                 }
             }
-            var results: [KEM.KeyPair] = []
-            for try await keyPair in group {
-                results.append(keyPair)
+            var results: [MLKEM768.PrivateKey] = []
+            for try await key in group {
+                results.append(key)
             }
             return results
         }
 
         #expect(keys.count == 100)
-        let uniquePublicKeys = Set(keys.map { $0.publicKey })
+        let uniquePublicKeys = Set(keys.map { $0.publicKey.rawRepresentation })
         #expect(uniquePublicKeys.count == 100)
     }
 
-    @Test("100 concurrent encap/decap round-trips produce matching secrets")
-    func concurrentEncapDecap() async throws {
-        let keyPair = try KEM.generateKeyPair(algorithm: .mlkem768)
+    @Test("100 concurrent generate/decrypt round-trips produce matching secrets")
+    func concurrentGenerateDecrypt() async throws {
+        let privateKey = try MLKEM768.PrivateKey()
 
         try await withThrowingTaskGroup(of: Void.self) { group in
             for _ in 0..<100 {
                 group.addTask {
-                    let encap = try KEM.encapsulate(algorithm: .mlkem768, publicKey: keyPair.publicKey)
-                    let decapped = try KEM.decapsulate(
-                        algorithm: .mlkem768,
-                        ciphertext: encap.ciphertext,
-                        secretKey: keyPair.secretKey
-                    )
-                    #expect(decapped == encap.sharedSecret)
+                    let sealed = try privateKey.publicKey.generateSharedSecret()
+                    let secret = try privateKey.decryptSharedSecret(sealed.ciphertext)
+                    #expect(secret.rawRepresentation == sealed.sharedSecret.rawRepresentation)
                 }
             }
             try await group.waitForAll()
@@ -49,23 +45,14 @@ import Foundation
 
     @Test("50 concurrent sign/verify operations all succeed")
     func concurrentSignVerify() async throws {
-        let keyPair = try Signature.generateKeyPair(algorithm: .falcon512)
+        let signingKey = try Falcon512.PrivateKey()
         let message = Data("Concurrent post-quantum signing test.".utf8)
 
         try await withThrowingTaskGroup(of: Void.self) { group in
             for _ in 0..<50 {
                 group.addTask {
-                    let sig = try Signature.sign(
-                        algorithm: .falcon512,
-                        message: message,
-                        secretKey: keyPair.secretKey
-                    )
-                    let valid = try Signature.verify(
-                        algorithm: .falcon512,
-                        message: message,
-                        signature: sig,
-                        publicKey: keyPair.publicKey
-                    )
+                    let sig = try signingKey.signature(for: message)
+                    let valid = try signingKey.publicKey.isValidSignature(sig, for: message)
                     #expect(valid)
                 }
             }

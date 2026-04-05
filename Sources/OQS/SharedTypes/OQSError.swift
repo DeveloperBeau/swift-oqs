@@ -1,10 +1,22 @@
+/// Something went wrong during a cryptographic operation.
+///
+/// Most commonly you'll see `invalidKeySize` when importing keys with
+/// wrong-length data, or `algorithmNotAvailable` if a liboqs algorithm
+/// wasn't enabled in the build.
 public enum OQSError: Error, Sendable, CustomStringConvertible {
+    /// The requested algorithm is not available in the current build.
     case algorithmNotAvailable(String)
+    /// Key pair generation failed.
     case keyGenerationFailed
+    /// KEM encapsulation failed.
     case encapsulationFailed
+    /// KEM decapsulation failed.
     case decapsulationFailed
+    /// Signature generation failed.
     case signFailed
+    /// Signature verification failed.
     case verifyFailed
+    /// The provided key data has the wrong size.
     case invalidKeySize(expected: Int, actual: Int)
 
     public var description: String {
