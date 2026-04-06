@@ -23,7 +23,7 @@ jobs:
           - name: Windows
             runner: windows-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: DeveloperBeau/setup-swift@v1
       - name: Build
         run: swift build -v
@@ -34,7 +34,7 @@ jobs:
     name: Android
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: skiptools/swift-android-action@v2
         with:
           swift-version: '6.3'
