@@ -9,7 +9,7 @@ Post-quantum cryptography for Swift, powered by [liboqs](https://github.com/open
 - Type-safe Swift API for key encapsulation and digital signatures
 - Vendored liboqs C source, no system dependencies. Just add the package
 - Swift 6 strict concurrency (`Sendable` throughout)
-- macOS, Linux, and Windows
+- macOS, Linux, Windows, and Android
 
 ## Why post-quantum?
 
@@ -46,7 +46,7 @@ That's what this library does. The KEM replaces the old Diffie-Hellman key excha
 ## Requirements
 
 - Swift 6.3+
-- macOS 13+ / iOS 16+ / tvOS 16+ / watchOS 9+ / Linux / Windows
+- macOS 13+ / iOS 16+ / tvOS 16+ / watchOS 9+ / Linux / Windows / Android
 
 ## Installation
 
