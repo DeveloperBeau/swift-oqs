@@ -9,68 +9,23 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  build-macos:
-    name: macOS
-    runs-on: macos-latest
+  build:
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: macOS
+            runner: macos-latest
+          - name: Linux
+            runner: ubuntu-24.04
+          - name: Windows
+            runner: windows-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Install Swift 6.3
-        run: |
-          curl -sLO "https://download.swift.org/swift-6.3-release/xcode/swift-6.3-RELEASE/swift-6.3-RELEASE-osx.pkg"
-          sudo installer -pkg swift-6.3-RELEASE-osx.pkg -target /
-          export TOOLCHAINS=swift
-          echo "TOOLCHAINS=swift" >> $GITHUB_ENV
-          xcrun --toolchain swift swift --version
-      - name: Build
-        run: xcrun --toolchain swift swift build -v
-      - name: Test
-        run: xcrun --toolchain swift swift test -v
-
-  build-linux:
-    name: Linux
-    runs-on: ubuntu-24.04
-    container:
-      image: swift:6.3
-    steps:
-      - uses: actions/checkout@v4
+      - uses: DeveloperBeau/setup-swift@v1
       - name: Build
         run: swift build -v
-      - name: Test
-        run: swift test -v
-
-  build-windows:
-    name: Windows
-    runs-on: windows-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Install Visual Studio components
-        run: |
-          winget install --id Microsoft.VisualStudio.2022.Community --exact --force --custom "--add Microsoft.VisualStudio.Component.Windows11SDK.22000 --add Microsoft.VisualStudio.Component.VC.Tools.x86.x64" --source winget --accept-source-agreements --accept-package-agreements
-        shell: pwsh
-
-      - name: Install Swift
-        run: |
-          winget install --id Swift.Toolchain -e --source winget --accept-source-agreements --accept-package-agreements
-          # Refresh PATH and set SDKROOT
-          $env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User")
-          ($env:Path -split ';' | Where-Object { $_ -like '*Swift*' }) | ForEach-Object { echo $_ | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append }
-          # Find and set Windows SDK
-          $sdk = Get-ChildItem "$env:LocalAppData\Programs\Swift\Platforms" -Recurse -Filter "Windows.sdk" -Directory -ErrorAction SilentlyContinue | Select-Object -First 1
-          if ($sdk) {
-            echo "SDKROOT=$($sdk.FullName)" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-            Write-Host "SDKROOT=$($sdk.FullName)"
-          } else {
-            Write-Host "Windows.sdk not found, listing Swift install:"
-            Get-ChildItem "$env:LocalAppData\Programs\Swift" -Recurse -Directory -Depth 3 | ForEach-Object { Write-Host $_.FullName }
-          }
-        shell: pwsh
-
-      - name: Swift version
-        run: swift --version
-
-      - name: Build
-        run: swift build -v
-
       - name: Test
         run: swift test -v
