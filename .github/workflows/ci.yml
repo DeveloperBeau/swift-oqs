@@ -19,7 +19,7 @@ jobs:
           - name: macOS
             runner: macos-latest
           - name: Linux
-            runner: ubuntu-24.04
+            runner: ubuntu-latest
           - name: Windows
             runner: windows-latest
     steps:
@@ -32,7 +32,7 @@ jobs:
 
   android:
     name: Android
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
       - uses: skiptools/swift-android-action@v2

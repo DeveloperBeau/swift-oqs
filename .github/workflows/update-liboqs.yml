@@ -12,9 +12,9 @@ permissions:
 jobs:
   check-update:
     name: Check for new liboqs release
-    runs-on: macos-15
+    runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Get current version
         id: current
@@ -40,6 +40,10 @@ jobs:
         run: |
           echo "${{ steps.latest.outputs.version }}" > LIBOQS_VERSION
           ./scripts/vendor-liboqs.sh
+
+      - name: Setup Swift
+        if: steps.compare.outputs.update_available == 'true'
+        uses: DeveloperBeau/setup-swift@v1
 
       - name: Build and test
         if: steps.compare.outputs.update_available == 'true'
