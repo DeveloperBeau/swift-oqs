@@ -28,9 +28,9 @@ OQS_API const char *OQS_KEM_alg_identifier(size_t i) {
 		OQS_KEM_alg_classic_mceliece_6960119f,
 		OQS_KEM_alg_classic_mceliece_8192128,
 		OQS_KEM_alg_classic_mceliece_8192128f,
-		OQS_KEM_alg_hqc_128,
-		OQS_KEM_alg_hqc_192,
-		OQS_KEM_alg_hqc_256,
+		OQS_KEM_alg_hqc_1,
+		OQS_KEM_alg_hqc_3,
+		OQS_KEM_alg_hqc_5,
 		OQS_KEM_alg_kyber_512,
 		OQS_KEM_alg_kyber_768,
 		OQS_KEM_alg_kyber_1024,
@@ -51,6 +51,12 @@ OQS_API const char *OQS_KEM_alg_identifier(size_t i) {
 		OQS_KEM_alg_frodokem_976_shake,
 		OQS_KEM_alg_frodokem_1344_aes,
 		OQS_KEM_alg_frodokem_1344_shake,
+		OQS_KEM_alg_efrodokem_640_aes,
+		OQS_KEM_alg_efrodokem_640_shake,
+		OQS_KEM_alg_efrodokem_976_aes,
+		OQS_KEM_alg_efrodokem_976_shake,
+		OQS_KEM_alg_efrodokem_1344_aes,
+		OQS_KEM_alg_efrodokem_1344_shake,
 	};
 	if (i >= OQS_KEM_algs_length) {
 		return NULL;
@@ -155,22 +161,22 @@ OQS_API int OQS_KEM_alg_is_enabled(const char *method_name) {
 		return 0;
 #endif
 
-	} else if (0 == strcasecmp(method_name, OQS_KEM_alg_hqc_128)) {
-#ifdef OQS_ENABLE_KEM_hqc_128
+	} else if (0 == strcasecmp(method_name, OQS_KEM_alg_hqc_1)) {
+#ifdef OQS_ENABLE_KEM_hqc_1
 		return 1;
 #else
 		return 0;
 #endif
 
-	} else if (0 == strcasecmp(method_name, OQS_KEM_alg_hqc_192)) {
-#ifdef OQS_ENABLE_KEM_hqc_192
+	} else if (0 == strcasecmp(method_name, OQS_KEM_alg_hqc_3)) {
+#ifdef OQS_ENABLE_KEM_hqc_3
 		return 1;
 #else
 		return 0;
 #endif
 
-	} else if (0 == strcasecmp(method_name, OQS_KEM_alg_hqc_256)) {
-#ifdef OQS_ENABLE_KEM_hqc_256
+	} else if (0 == strcasecmp(method_name, OQS_KEM_alg_hqc_5)) {
+#ifdef OQS_ENABLE_KEM_hqc_5
 		return 1;
 #else
 		return 0;
@@ -297,6 +303,42 @@ OQS_API int OQS_KEM_alg_is_enabled(const char *method_name) {
 #else
 		return 0;
 #endif
+	} else if (0 == strcasecmp(method_name, OQS_KEM_alg_efrodokem_640_aes)) {
+#ifdef OQS_ENABLE_KEM_efrodokem_640_aes
+		return 1;
+#else
+		return 0;
+#endif
+	} else if (0 == strcasecmp(method_name, OQS_KEM_alg_efrodokem_640_shake)) {
+#ifdef OQS_ENABLE_KEM_efrodokem_640_shake
+		return 1;
+#else
+		return 0;
+#endif
+	} else if (0 == strcasecmp(method_name, OQS_KEM_alg_efrodokem_976_aes)) {
+#ifdef OQS_ENABLE_KEM_efrodokem_976_aes
+		return 1;
+#else
+		return 0;
+#endif
+	} else if (0 == strcasecmp(method_name, OQS_KEM_alg_efrodokem_976_shake)) {
+#ifdef OQS_ENABLE_KEM_efrodokem_976_shake
+		return 1;
+#else
+		return 0;
+#endif
+	} else if (0 == strcasecmp(method_name, OQS_KEM_alg_efrodokem_1344_aes)) {
+#ifdef OQS_ENABLE_KEM_efrodokem_1344_aes
+		return 1;
+#else
+		return 0;
+#endif
+	} else if (0 == strcasecmp(method_name, OQS_KEM_alg_efrodokem_1344_shake)) {
+#ifdef OQS_ENABLE_KEM_efrodokem_1344_shake
+		return 1;
+#else
+		return 0;
+#endif
 		// EDIT-WHEN-ADDING-KEM
 	} else {
 		return 0;
@@ -396,23 +438,23 @@ OQS_API OQS_KEM *OQS_KEM_new(const char *method_name) {
 		return NULL;
 #endif
 
-	} else if (0 == strcasecmp(method_name, OQS_KEM_alg_hqc_128)) {
-#ifdef OQS_ENABLE_KEM_hqc_128
-		return OQS_KEM_hqc_128_new();
+	} else if (0 == strcasecmp(method_name, OQS_KEM_alg_hqc_1)) {
+#ifdef OQS_ENABLE_KEM_hqc_1
+		return OQS_KEM_hqc_1_new();
 #else
 		return NULL;
 #endif
 
-	} else if (0 == strcasecmp(method_name, OQS_KEM_alg_hqc_192)) {
-#ifdef OQS_ENABLE_KEM_hqc_192
-		return OQS_KEM_hqc_192_new();
+	} else if (0 == strcasecmp(method_name, OQS_KEM_alg_hqc_3)) {
+#ifdef OQS_ENABLE_KEM_hqc_3
+		return OQS_KEM_hqc_3_new();
 #else
 		return NULL;
 #endif
 
-	} else if (0 == strcasecmp(method_name, OQS_KEM_alg_hqc_256)) {
-#ifdef OQS_ENABLE_KEM_hqc_256
-		return OQS_KEM_hqc_256_new();
+	} else if (0 == strcasecmp(method_name, OQS_KEM_alg_hqc_5)) {
+#ifdef OQS_ENABLE_KEM_hqc_5
+		return OQS_KEM_hqc_5_new();
 #else
 		return NULL;
 #endif
@@ -538,6 +580,42 @@ OQS_API OQS_KEM *OQS_KEM_new(const char *method_name) {
 #else
 		return NULL;
 #endif
+	} else if (0 == strcasecmp(method_name, OQS_KEM_alg_efrodokem_640_aes)) {
+#ifdef OQS_ENABLE_KEM_efrodokem_640_aes
+		return OQS_KEM_efrodokem_640_aes_new();
+#else
+		return NULL;
+#endif
+	} else if (0 == strcasecmp(method_name, OQS_KEM_alg_efrodokem_640_shake)) {
+#ifdef OQS_ENABLE_KEM_efrodokem_640_shake
+		return OQS_KEM_efrodokem_640_shake_new();
+#else
+		return NULL;
+#endif
+	} else if (0 == strcasecmp(method_name, OQS_KEM_alg_efrodokem_976_aes)) {
+#ifdef OQS_ENABLE_KEM_efrodokem_976_aes
+		return OQS_KEM_efrodokem_976_aes_new();
+#else
+		return NULL;
+#endif
+	} else if (0 == strcasecmp(method_name, OQS_KEM_alg_efrodokem_976_shake)) {
+#ifdef OQS_ENABLE_KEM_efrodokem_976_shake
+		return OQS_KEM_efrodokem_976_shake_new();
+#else
+		return NULL;
+#endif
+	} else if (0 == strcasecmp(method_name, OQS_KEM_alg_efrodokem_1344_aes)) {
+#ifdef OQS_ENABLE_KEM_efrodokem_1344_aes
+		return OQS_KEM_efrodokem_1344_aes_new();
+#else
+		return NULL;
+#endif
+	} else if (0 == strcasecmp(method_name, OQS_KEM_alg_efrodokem_1344_shake)) {
+#ifdef OQS_ENABLE_KEM_efrodokem_1344_shake
+		return OQS_KEM_efrodokem_1344_shake_new();
+#else
+		return NULL;
+#endif
 		// EDIT-WHEN-ADDING-KEM
 	} else {
 		return NULL;
@@ -545,7 +623,7 @@ OQS_API OQS_KEM *OQS_KEM_new(const char *method_name) {
 }
 
 OQS_API OQS_STATUS OQS_KEM_keypair_derand(const OQS_KEM *kem, uint8_t *public_key, uint8_t *secret_key, const uint8_t *seed) {
-	if (kem == NULL) {
+	if (kem == NULL || kem->keypair_derand == NULL) {
 		return OQS_ERROR;
 	} else {
 		return kem->keypair_derand(public_key, secret_key, seed);
@@ -553,7 +631,7 @@ OQS_API OQS_STATUS OQS_KEM_keypair_derand(const OQS_KEM *kem, uint8_t *public_ke
 }
 
 OQS_API OQS_STATUS OQS_KEM_keypair(const OQS_KEM *kem, uint8_t *public_key, uint8_t *secret_key) {
-	if (kem == NULL) {
+	if (kem == NULL || kem->keypair == NULL) {
 		return OQS_ERROR;
 	} else {
 		return kem->keypair(public_key, secret_key);
@@ -561,7 +639,7 @@ OQS_API OQS_STATUS OQS_KEM_keypair(const OQS_KEM *kem, uint8_t *public_key, uint
 }
 
 OQS_API OQS_STATUS OQS_KEM_encaps_derand(const OQS_KEM *kem, uint8_t *ciphertext, uint8_t *shared_secret, const uint8_t *public_key, const uint8_t *seed) {
-	if (kem == NULL) {
+	if (kem == NULL || kem->encaps_derand == NULL) {
 		return OQS_ERROR;
 	} else {
 		return kem->encaps_derand(ciphertext, shared_secret, public_key, seed);
@@ -569,7 +647,7 @@ OQS_API OQS_STATUS OQS_KEM_encaps_derand(const OQS_KEM *kem, uint8_t *ciphertext
 }
 
 OQS_API OQS_STATUS OQS_KEM_encaps(const OQS_KEM *kem, uint8_t *ciphertext, uint8_t *shared_secret, const uint8_t *public_key) {
-	if (kem == NULL) {
+	if (kem == NULL || kem->encaps == NULL) {
 		return OQS_ERROR;
 	} else {
 		return kem->encaps(ciphertext, shared_secret, public_key);
@@ -577,7 +655,7 @@ OQS_API OQS_STATUS OQS_KEM_encaps(const OQS_KEM *kem, uint8_t *ciphertext, uint8
 }
 
 OQS_API OQS_STATUS OQS_KEM_decaps(const OQS_KEM *kem, uint8_t *shared_secret, const uint8_t *ciphertext, const uint8_t *secret_key) {
-	if (kem == NULL) {
+	if (kem == NULL || kem->decaps == NULL) {
 		return OQS_ERROR;
 	} else {
 		return kem->decaps(shared_secret, ciphertext, secret_key);

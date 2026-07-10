@@ -10,15 +10,20 @@ echo "Vendoring liboqs $VERSION..."
 
 # Hand-maintained files preserved across re-vendoring (paths relative to
 # $DEST). None have an upstream counterpart in the release tarball: oqsconfig.h
-# is our build config, oqs_safe.h is ours (SafeInteropWrappers), and
-# mlkem-native's config.h is hand-added. (oqs.h is NOT preserved — it is
-# regenerated below from the vendored header set.)
+# is our build config, oqs_safe.h is ours (SafeInteropWrappers), and the
+# mlkem-native / mldsa-native fallback config headers are hand-added (they
+# supply the per-variant parameter set that liboqs's CMake passes via
+# -DML{K,D}_CONFIG_FILE, which SPM cannot do per-target). (oqs.h is NOT
+# preserved — it is regenerated below from the vendored header set.)
 PRESERVE=(
     "include/oqs/oqsconfig.h"
     "include/oqs/oqs_safe.h"
-    "src/kem/ml_kem/mlkem-native_ml-kem-512_ref/mlkem/src/config.h"
-    "src/kem/ml_kem/mlkem-native_ml-kem-768_ref/mlkem/src/config.h"
-    "src/kem/ml_kem/mlkem-native_ml-kem-1024_ref/mlkem/src/config.h"
+    "src/kem/ml_kem/mlkem-native_ml-kem-512_ref/mlkem/src/mlkem_native_config.h"
+    "src/kem/ml_kem/mlkem-native_ml-kem-768_ref/mlkem/src/mlkem_native_config.h"
+    "src/kem/ml_kem/mlkem-native_ml-kem-1024_ref/mlkem/src/mlkem_native_config.h"
+    "src/sig/ml_dsa/mldsa-native_ml-dsa-44_ref/mldsa/src/mldsa_native_config.h"
+    "src/sig/ml_dsa/mldsa-native_ml-dsa-65_ref/mldsa/src/mldsa_native_config.h"
+    "src/sig/ml_dsa/mldsa-native_ml-dsa-87_ref/mldsa/src/mldsa_native_config.h"
 )
 BACKUP=$(mktemp -d)
 for rel in "${PRESERVE[@]}"; do
@@ -171,13 +176,10 @@ generate_unity() {
     fi
 }
 
-# ML-DSA variants select their namespace from DILITHIUM_MODE (CMake
-# -DDILITHIUM_MODE=N). config.h defaults it to 2 (ML-DSA-44) under #ifndef, so
-# 65/87 must override it or they emit ML-DSA-44's symbols. Values mirror
-# src/sig/ml_dsa/CMakeLists.txt.
-generate_unity "src/sig/ml_dsa" "pqcrystals-dilithium-standard_ml-dsa-44_ref" "DILITHIUM_MODE 2"
-generate_unity "src/sig/ml_dsa" "pqcrystals-dilithium-standard_ml-dsa-65_ref" "DILITHIUM_MODE 3"
-generate_unity "src/sig/ml_dsa" "pqcrystals-dilithium-standard_ml-dsa-87_ref" "DILITHIUM_MODE 5"
+# ML-DSA (mldsa-native, 0.16.0+) compiles its _ref variant dirs as plain TUs,
+# exactly like ml_kem: symbols are namespaced per parameter set by the
+# hand-added mldsa/src/mldsa_native_config.h in each variant dir (see
+# PRESERVE). No unity TU is needed.
 
 # Kyber variants take their security level from KYBER_K (CMake -DKYBER_K=N).
 generate_unity "src/kem/kyber" "pqcrystals-kyber_kyber512_ref"  "KYBER_K 2"
@@ -227,6 +229,15 @@ generate_unity "src/sig/uov" "pqov_ov_Ip_pkc_skc_ref"   "_OV256_112_44" "_OV_PKC
 generate_unity "src/sig/uov" "pqov_ov_III_pkc_skc_ref"  "_OV256_184_72" "_OV_PKC_SKC"  "_UTILS_OQS_"
 generate_unity "src/sig/uov" "pqov_ov_V_pkc_skc_ref"    "_OV256_244_96" "_OV_PKC_SKC"  "_UTILS_OQS_"
 
+# HQC (pqc-hqc, 20250822 spec, 0.16.0+): three ref variant dirs with identical
+# basenames and variant-local headers (quote-included, like UOV). Symbols are
+# namespaced via PQCHQC_NAMESPACE_PREFIX; USE_OQS_RANDOMBYTES selects liboqs's
+# RNG. Values mirror src/kem/hqc/CMakeLists.txt. The glue kem_hqc_N.c compiles
+# normally in the main target.
+generate_unity "src/kem/hqc" "pqc-hqc_hqc-1_ref" "HQC_ARCH_REF 1" "PQCHQC_NAMESPACE_PREFIX PQCHQC_HQC1_C_" "USE_OQS_RANDOMBYTES"
+generate_unity "src/kem/hqc" "pqc-hqc_hqc-3_ref" "HQC_ARCH_REF 1" "PQCHQC_NAMESPACE_PREFIX PQCHQC_HQC3_C_" "USE_OQS_RANDOMBYTES"
+generate_unity "src/kem/hqc" "pqc-hqc_hqc-5_ref" "HQC_ARCH_REF 1" "PQCHQC_NAMESPACE_PREFIX PQCHQC_HQC5_C_" "USE_OQS_RANDOMBYTES"
+
 # BIKE keeps ALL sources in one additional_r4 dir, compiled three times with a
 # different LEVEL/FUNC_PREFIX (CMake -DLEVEL=N -DFUNC_PREFIX=OQS_KEM_bike_lN).
 # Emit one unity TU per level that bakes in those defines, force-includes
@@ -260,6 +271,55 @@ generate_bike_unity() {
 }
 
 generate_bike_unity
+
+# MQOM (0.16.0+): all sources live in shared mqom_mqom_common/, compiled once
+# per variant with a distinct -D set (namespaces + MQOM2_PARAM_* + feature
+# flags) — BIKE's shape. One unity TU per *_default variant bakes in the
+# defines parsed from that variant's add_library/target_compile_options pair
+# in src/sig/mqom/CMakeLists.txt (programmatic, like xmss: a wrong define set
+# still links and roundtrips, so it must come from source). The glue
+# sig_mqom_<variant>.c is part of the variant's CMake source list (it needs
+# the same namespace defines), so it is #included in the TU, not compiled
+# separately. memopt/avx2 variants are not built.
+generate_mqom_unity() {
+    local fam="src/sig/mqom"
+    local cmake="$DEST/$fam/CMakeLists.txt"
+    local emitted=0
+    local target="" line
+    while IFS= read -r line; do
+        case "$line" in
+            *"add_library(mqom_mqom2_"*"_default OBJECT"*)
+                target="$(printf '%s\n' "$line" | grep -oE 'mqom_mqom2_[a-z0-9_]+_default' | head -1 || true)"
+                ;;
+            *target_compile_options*MQOM2_FOR_LIBOQS*)
+                if [ -n "$target" ] && printf '%s\n' "$line" | grep -q "($target "; then
+                    # e.g. mqom_mqom2_cat1_gf16_fast_r3_default -> mqom2_cat1_gf16_fast_r3
+                    local variant="${target#mqom_}"; variant="${variant%_default}"
+                    local out="$DEST/$fam/unity_${target}.c"
+                    {
+                        echo "/* GENERATED by scripts/vendor-liboqs.sh — do not edit. */"
+                        # -DNAME=VAL -> #define NAME VAL ; -DNAME -> #define NAME
+                        printf '%s\n' "$line" | grep -oE '\-D[A-Za-z0-9_]+(=[A-Za-z0-9_./"-]+)?' | sort -u | \
+                            sed -e 's/^-D//' -e 's/=/ /' -e 's/^/#define /'
+                        echo "#include \"sig_mqom_${variant}.c\""
+                        for f in "$DEST/$fam/mqom_mqom_common"/*.c; do
+                            echo "#include \"mqom_mqom_common/$(basename "$f")\""
+                        done
+                    } > "$out"
+                    echo "  generated $out"
+                    emitted=$((emitted + 1))
+                    target=""
+                fi
+                ;;
+        esac
+    done < "$cmake"
+    if [ "$emitted" -ne 12 ]; then
+        echo "error: parsed $emitted MQOM default variants from $cmake, expected 12 — upstream CMakeLists format changed; update this script" >&2
+        exit 1
+    fi
+}
+
+generate_mqom_unity
 
 # XMSS/XMSSMT: 37 variants, each compiled by liboqs's CMake as its own OBJECT
 # target with a per-variant -DXMSS_PARAMS_NAMESPACE and -DHASH (HASH selects the

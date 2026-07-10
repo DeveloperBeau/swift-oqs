@@ -30,9 +30,7 @@
 #ifndef MLK_VERIFY_H
 #define MLK_VERIFY_H
 
-#include <limits.h>
-#include <stddef.h>
-#include <stdint.h>
+
 #include "cbmc.h"
 #include "common.h"
 
@@ -115,232 +113,235 @@ __contract__(ensures(return_value == b)) { return (b ^ mlk_ct_get_optblocker_u8(
 static MLK_INLINE uint32_t mlk_value_barrier_u32(uint32_t b)
 __contract__(ensures(return_value == b))
 {
-  __asm__("" : "+r"(b));
+  __asm__ volatile("" : "+r"(b));
   return b;
 }
 
 static MLK_INLINE int32_t mlk_value_barrier_i32(int32_t b)
 __contract__(ensures(return_value == b))
 {
-  __asm__("" : "+r"(b));
+  __asm__ volatile("" : "+r"(b));
   return b;
 }
 
 static MLK_INLINE uint8_t mlk_value_barrier_u8(uint8_t b)
 __contract__(ensures(return_value == b))
 {
-  __asm__("" : "+r"(b));
+  __asm__ volatile("" : "+r"(b));
   return b;
 }
 
 #endif /* MLK_USE_ASM_VALUE_BARRIER */
 
-/*
- * The ct_cmask_nonzero_xxx functions below make deliberate use of unsigned
- * overflow, which is fully defined behaviour in C. It is thus safe to disable
- * this warning.
- */
-#ifdef CBMC
-#pragma CPROVER check push
-#pragma CPROVER check disable "unsigned-overflow"
-#endif
-
-/*************************************************
- * Name:        mlk_ct_cmask_nonzero_u16
- *
- * Description: Return 0 if input is zero, and -1 otherwise.
- *
- * Arguments:   uint16_t x: Value to be converted into a mask
- *
- **************************************************/
-
-/* Reference: Embedded in `cmov_int16()` in the reference implementation @[REF].
- *            - Use value barrier and shift instead of `b = -b` to
- *              convert condition into mask. */
-static MLK_INLINE uint16_t mlk_ct_cmask_nonzero_u16(uint16_t x)
-__contract__(ensures(return_value == ((x == 0) ? 0 : 0xFFFF)))
-{
-  uint32_t tmp = mlk_value_barrier_u32(-((uint32_t)x));
-  tmp >>= 16;
-  return tmp;
-}
-
-/*************************************************
- * Name:        mlk_ct_cmask_nonzero_u8
- *
- * Description: Return 0 if input is zero, and -1 otherwise.
- *
- * Arguments:   uint8_t x: Value to be converted into a mask
- *
- **************************************************/
-
-/* Reference: Embedded in `verify()` and `cmov()` in the
- *            reference implementation @[REF].
- *            - We include a value barrier not present in the
- *              reference implementation, to prevent the compiler
- *              from realizing that this function returns a mask. */
-static MLK_INLINE uint8_t mlk_ct_cmask_nonzero_u8(uint8_t x)
-__contract__(ensures(return_value == ((x == 0) ? 0 : 0xFF)))
-{
-  uint32_t tmp = mlk_value_barrier_u32(-((uint32_t)x));
-  tmp >>= 24;
-  return tmp;
-}
-
-/* Put unsigned overflow warnings in CBMC back into scope */
-#ifdef CBMC
-#pragma CPROVER check pop
-#endif
-
-/*
- * The mlk_ct_cmask_neg_i16 function below makes deliberate use of
- * signed to unsigned integer conversion, which is fully defined
- * behaviour in C. It is thus safe to disable this warning.
- */
 #ifdef CBMC
 #pragma CPROVER check push
 #pragma CPROVER check disable "conversion"
 #endif
+/**
+ * Cast uint16 value to int16.
+ *
+ * @param x Input value.
+ *
+ * @return For uint16_t x, the unique y in int16_t so that x == y mod 2^16.
+ *         Concretely:
+ *         - x <  32768: returns x
+ *         - x >= 32768: returns x - 65536
+ */
+static MLK_ALWAYS_INLINE int16_t mlk_cast_uint16_to_int16(uint16_t x)
+{
+  /*
+   * PORTABILITY: This relies on uint16_t -> int16_t
+   * being implemented as the inverse of int16_t -> uint16_t,
+   * which is implementation-defined (C99 6.3.1.3 (3))
+   * CBMC (correctly) fails to prove this conversion is OK,
+   * so we have to suppress that check here
+   */
+  return (int16_t)x;
+}
+#ifdef CBMC
+#pragma CPROVER check pop
+#endif
 
-/*************************************************
- * Name:        mlk_ct_cmask_neg_i16
+/**
+ * Cast int32 value to uint16 as per C standard.
  *
- * Description: Return 0 if input is non-negative, and -1 otherwise.
+ * @param x Input value.
  *
- * Arguments:   uint16_t x: Value to be converted into a mask
- *
- **************************************************/
+ * @return For int32_t x, the unique y in uint16_t so that x == y mod 2^16.
+ */
+static MLK_ALWAYS_INLINE uint16_t mlk_cast_int32_to_uint16(int32_t x)
+{
+  return (uint16_t)(x & (int32_t)UINT16_MAX);
+}
 
-/* Reference: Embedded in polynomial compression function in the
- *            reference implementation @[REF].
- *            - Used as part of signed->unsigned conversion for modular
- *              representatives to detect whether the input is negative.
- *              This happen in `mlk_poly_reduce()` here, and as part of
- *              polynomial compression functions in the reference
- *              implementation. See `mlk_poly_reduce()`.
- *            - We use value barriers to reduce the risk of
- *              compiler-introduced branches. */
+/**
+ * Cast int16 value to uint16 as per C standard.
+ *
+ * @param x Input value.
+ *
+ * @return For int16_t x, the unique y in uint16_t so that x == y mod 2^16.
+ */
+static MLK_ALWAYS_INLINE uint16_t mlk_cast_int16_to_uint16(int32_t x)
+{
+  return mlk_cast_int32_to_uint16(x);
+}
+
+/**
+ * Return 0 if input is non-negative, and -1 otherwise.
+ *
+ * @reference{Embedded in the polynomial compression function in the
+ * reference implementation @[REF]. Used as part of signed->unsigned
+ * conversion for modular representatives to detect whether the input is
+ * negative. This happens in `mlk_poly_reduce()` here, and as part of
+ * polynomial compression functions in the reference implementation. See
+ * `mlk_poly_reduce()`. We use value barriers to reduce the risk of
+ * compiler-introduced branches.}
+ *
+ * @param x Value to be converted into a mask.
+ *
+ * @return Mask value (0 or 0xFFFF).
+ */
 static MLK_INLINE uint16_t mlk_ct_cmask_neg_i16(int16_t x)
 __contract__(ensures(return_value == ((x < 0) ? 0xFFFF : 0)))
 {
   int32_t tmp = mlk_value_barrier_i32((int32_t)x);
+  /*
+   * PORTABILITY: Right-shift on a signed integer is
+   * implementation-defined for negative left argument.
+   * Here, we assume it's sign-preserving "arithmetic" shift right.
+   * See (C99 6.5.7 (5))
+   */
   tmp >>= 16;
-  return (int16_t)tmp;
+  return mlk_cast_int32_to_uint16(tmp);
 }
 
-/* Put unsigned-to-signed warnings in CBMC back into scope */
-#ifdef CBMC
-#pragma CPROVER check pop
-#endif
-
-/*
- * The ct_csel_xxx functions below make deliberate use of unsigned
- * to signed integer conversion, which is implementation-defined
- * behaviour. Here, we assume that uint16_t -> int16_t is inverse
- * to int16_t -> uint16_t.
+/**
+ * Return 0 if input is zero, and -1 otherwise.
+ *
+ * @reference{Embedded in `cmov_int16()` in the reference implementation
+ * @[REF]. Uses a value barrier and shift instead of `b = -b` to convert
+ * condition into mask.}
+ *
+ * @param x Value to be converted into a mask.
+ *
+ * @return Mask value (0 or 0xFFFF).
  */
-#ifdef CBMC
-#pragma CPROVER check push
-#pragma CPROVER check disable "conversion"
-#endif
+static MLK_INLINE uint16_t mlk_ct_cmask_nonzero_u16(uint16_t x)
+__contract__(ensures(return_value == ((x == 0) ? 0 : 0xFFFF)))
+{
+  int32_t tmp = mlk_value_barrier_i32(-((int32_t)x));
+  /*
+   * PORTABILITY: Right-shift on a signed integer is
+   * implementation-defined for negative left argument.
+   * Here, we assume it's sign-preserving "arithmetic" shift right.
+   * See (C99 6.5.7 (5))
+   */
+  tmp >>= 16;
+  return mlk_cast_int32_to_uint16(tmp);
+}
 
-/*************************************************
- * Name:        mlk_ct_sel_int16
+/**
+ * Return 0 if input is zero, and -1 otherwise.
  *
- * Description: Functionally equivalent to cond ? a : b,
- *              but implemented with guards against
- *              compiler-introduced branches.
+ * @reference{Embedded in `verify()` and `cmov()` in the reference
+ * implementation @[REF]. We include a value barrier not present in the
+ * reference implementation, to prevent the compiler from realizing that
+ * this function returns a mask.}
  *
- * Arguments:   int16_t a:       First alternative
- *              int16_t b:       Second alternative
- *              uint16_t cond:   Condition variable.
+ * @param x Value to be converted into a mask.
  *
- * Specification:
- * - With `a = MLKEM_Q_HALF` and `b=0`, this essentially
- *   implements `Decompress_1` @[FIPS203, Eq (4.8)] in `mlk_poly_frommsg()`.
- * - With `a = x + MLKEM_Q`, `b = x`, and `cond` indicating whether `x`
- *   is negative, implements signed->unsigned conversion of modular
- *   representatives. Questions of representation are not considered
- *   in the specification @[FIPS203, Section 2.4.1, "The pseudocode is
- *   agnostic regarding how an integer modulo 𝑚 is represented in
- *   actual implementations"].
- *
- **************************************************/
+ * @return Mask value (0 or 0xFF).
+ */
+static MLK_INLINE uint8_t mlk_ct_cmask_nonzero_u8(uint8_t x)
+__contract__(ensures(return_value == ((x == 0) ? 0 : 0xFF)))
+{
+  uint16_t mask = mlk_ct_cmask_nonzero_u16((uint16_t)x);
+  return (uint8_t)(mask & 0xFF);
+}
 
-/* Reference: Embedded in polynomial compression function in the
- *            reference implementation @[REF].
- *            - Used as part of signed->unsigned conversion for modular
- *              representatives. This happen in `mlk_poly_reduce()` here,
- *              and as part of polynomial compression functions in @[REF].
- *              See `mlk_poly_reduce()`.
- *            - Barrier to reduce the risk of compiler-introduced branches.
- *            For `a = MLKEM_Q_HALF` and `b=0`, also embedded in
- *            `poly_frommsg()` from the reference implementation, which uses
- *            `cmov_int16()` instead. */
+/**
+ * Functionally equivalent to cond ? a : b, but implemented with guards
+ * against compiler-introduced branches.
+ *
+ * @spec{With `a = MLKEM_Q_HALF` and `b=0`, this essentially implements
+ * `Decompress_1` @[FIPS203, Eq (4.8)] in `mlk_poly_frommsg()`. With
+ * `a = x + MLKEM_Q`, `b = x`, and `cond` indicating whether `x` is negative,
+ * implements signed->unsigned conversion of modular representatives.
+ * Questions of representation are not considered in the specification
+ * @[FIPS203, Section 2.4.1, "The pseudocode is agnostic regarding how an
+ * integer modulo 𝑚 is represented in actual implementations"].}
+ *
+ * @reference{Embedded in the polynomial compression function in the
+ * reference implementation @[REF]. Used as part of signed->unsigned
+ * conversion for modular representatives. This happens in `mlk_poly_reduce()`
+ * here, and as part of polynomial compression functions in @[REF]. See
+ * `mlk_poly_reduce()`. Barrier to reduce the risk of compiler-introduced
+ * branches. For `a = MLKEM_Q_HALF` and `b=0`, also embedded in
+ * `poly_frommsg()` from the reference implementation, which uses
+ * `cmov_int16()` instead.}
+ *
+ * @param a    First alternative.
+ * @param b    Second alternative.
+ * @param cond Condition variable.
+ *
+ * @return @p a if @p cond != 0, else @p b.
+ */
 static MLK_INLINE int16_t mlk_ct_sel_int16(int16_t a, int16_t b, uint16_t cond)
 __contract__(ensures(return_value == (cond ? a : b)))
 {
-  uint16_t au = a, bu = b;
+  uint16_t au = mlk_cast_int16_to_uint16(a);
+  uint16_t bu = mlk_cast_int16_to_uint16(b);
   uint16_t res = bu ^ (mlk_ct_cmask_nonzero_u16(cond) & (au ^ bu));
-  return (int16_t)res;
+  return mlk_cast_uint16_to_int16(res);
 }
 
-/* Put unsigned-to-signed warnings in CBMC back into scope */
-#ifdef CBMC
-#pragma CPROVER check pop
-#endif
-
-/*************************************************
- * Name:        mlk_ct_sel_uint8
+/**
+ * Functionally equivalent to cond ? a : b, but implemented with guards
+ * against compiler-introduced branches.
  *
- * Description: Functionally equivalent to cond ? a : b,
- *              but implemented with guards against
- *              compiler-introduced branches.
+ * @reference{Embedded into `cmov()` in the reference implementation @[REF].
+ * Uses a value barrier to get mask from condition value.}
  *
- * Arguments:   uint8_t a:       First alternative
- *              uint8_t b:       Second alternative
- *              uuint8_t cond:   Condition variable.
+ * @param a    First alternative.
+ * @param b    Second alternative.
+ * @param cond Condition variable.
  *
- **************************************************/
-
-/* Reference: Embedded into `cmov()` in the reference implementation @[REF].
- *            - Use value barrier to get mask from condition value. */
+ * @return @p a if @p cond != 0, else @p b.
+ */
 static MLK_INLINE uint8_t mlk_ct_sel_uint8(uint8_t a, uint8_t b, uint8_t cond)
 __contract__(ensures(return_value == (cond ? a : b)))
 {
   return b ^ (mlk_ct_cmask_nonzero_u8(cond) & (a ^ b));
 }
 
-/*************************************************
- * Name:        mlk_ct_memcmp
+/**
+ * Compare two arrays for equality in constant time.
  *
- * Description: Compare two arrays for equality in constant time.
+ * @spec{Used to securely compute conditional move in @[FIPS203, Algorithm
+ * 18 (ML-KEM.Decaps_Internal, L9-11].}
  *
- * Arguments:   const uint8_t *a: pointer to first byte array
- *              const uint8_t *b: pointer to second byte array
- *              size_t len:       length of the byte arrays
+ * @reference{`cmov()` in the reference implementation @[REF]. We return
+ * `uint8_t`, not `int`. We use an additional XOR-accumulator in the
+ * comparison loop which prevents early abort if the OR-accumulator is 0xFF.
+ * We use a value barrier to convert the OR-accumulator into a mask; the
+ * reference implementation uses a shift which the compiler can argue to
+ * result in either 0 or 0xFF..FF.}
  *
- * Returns 0 if the byte arrays are equal, a non-zero value otherwise
+ * @param[in] a   First byte array.
+ * @param[in] b   Second byte array.
+ * @param     len Length of the byte arrays, upper-bounded to UINT16_MAX to
+ *                control proof complexity only.
  *
- * Specification:
- * - Used to securely compute conditional move in
- *   @[FIPS203, Algorithm 18 (ML-KEM.Decaps_Internal, L9-11]
- *
- **************************************************/
-
-/* Reference: `cmov()` in the reference implementation @[REF]
- *            - We return `uint8_t`, not `int`.
- *            - We use an additional XOR-accumulator in the comparison loop
- *              which prevents early abort if the OR-accumulator is 0xFF.
- *            - We use a value barrier to convert the OR-accumulator into
- *              a mask. The reference implementation uses a shift which the
- *              compiler can argue to result in either 0 of 0xFF..FF. */
+ * @retval 0    The byte arrays are equal.
+ * @retval 0xFF The byte arrays are not equal.
+ */
 static MLK_INLINE uint8_t mlk_ct_memcmp(const uint8_t *a, const uint8_t *b,
                                         const size_t len)
 __contract__(
+  requires(len <= UINT16_MAX)
   requires(memory_no_alias(a, len))
   requires(memory_no_alias(b, len))
-  requires(len <= INT_MAX)
+  ensures((return_value == 0) || (return_value == 0xFF))
   ensures((return_value == 0) == forall(i, 0, len, (a[i] == b[i]))))
 {
   uint8_t r = 0, s = 0;
@@ -349,7 +350,8 @@ __contract__(
   for (i = 0; i < len; i++)
   __loop__(
     invariant(i <= len)
-    invariant((r == 0) == (forall(k, 0, i, (a[k] == b[k])))))
+    invariant((r == 0) == (forall(k, 0, i, (a[k] == b[k]))))
+    decreases(len - i))
   {
     r |= a[i] ^ b[i];
     /* s is useless, but prevents the loop from being aborted once r=0xff. */
@@ -366,57 +368,54 @@ __contract__(
   return (mlk_value_barrier_u8(mlk_ct_cmask_nonzero_u8(r) ^ s) ^ s);
 }
 
-/*************************************************
- * Name:        mlk_ct_cmov_zero
+/**
+ * Copy len bytes from x to r if b is zero; don't modify x if b is non-zero.
+ * Assumes two's complement representation of negative integers. Runs in
+ * constant time.
  *
- * Description: Copy len bytes from x to r if b is zero;
- *              don't modify x if b is non-zero.
- *              assumes two's complement representation of negative integers.
- *              Runs in constant time.
+ * @spec{Used to securely compute conditional move in @[FIPS203, Algorithm
+ * 18 (ML-KEM.Decaps_Internal, L9-11].}
  *
- * Arguments:   uint8_t *r:       pointer to output byte array
- *              const uint8_t *x: pointer to input byte array
- *              size_t len:       Amount of bytes to be copied
- *              uint8_t b:        Condition value.
+ * @reference{`cmov()` in the reference implementation @[REF]. We move if
+ * condition value is `0`, not `1`. We use `mlk_ct_sel_uint8` for
+ * constant-time selection.}
  *
- * Specification:
- * - Used to securely compute conditional move in
- *   @[FIPS203, Algorithm 18 (ML-KEM.Decaps_Internal, L9-11]
- *
- **************************************************/
-
-/* Reference: `cmov()` in the reference implementation @[REF].
- *            - We move if condition value is `0`, not `1`.
- *            - We use `mlk_ct_sel_uint8` for constant-time selection. */
+ * @param[out] r   Output byte array.
+ * @param[in]  x   Input byte array.
+ * @param      len Number of bytes to be copied.
+ * @param      b   Condition value.
+ */
 static MLK_INLINE void mlk_ct_cmov_zero(uint8_t *r, const uint8_t *x,
                                         size_t len, uint8_t b)
 __contract__(
+  requires(len <= UINT32_MAX)
   requires(memory_no_alias(r, len))
   requires(memory_no_alias(x, len))
-  assigns(memory_slice(r, len)))
+  assigns(memory_slice(r, len))
+  ensures(forall(i, 0, len, (r[i] == (b == 0 ? x[i] : old(r)[i])))))
 {
   size_t i;
   for (i = 0; i < len; i++)
-  __loop__(invariant(i <= len))
+  __loop__(
+    invariant(i <= len)
+    invariant(forall(k, 0, i, r[k] == (b == 0 ? x[k] : loop_entry(r)[k])))
+    decreases(len - i))
   {
     r[i] = mlk_ct_sel_uint8(r[i], x[i], b);
   }
 }
 
-/*************************************************
- * Name:        mlk_zeroize
+/**
+ * Force-zeroize a buffer.
  *
- * Description: Force-zeroize a buffer.
+ * @spec{Used to implement @[FIPS203, Section 3.3, Destruction of
+ * intermediate values].}
  *
- * Arguments:   uint8_t *r:       pointer to byte array to be zeroed
- *              size_t len:       Amount of bytes to be zeroed
+ * @reference{Not present in the reference implementation @[REF].}
  *
- * Specification: Used to implement
- * @[FIPS203, Section 3.3, Destruction of intermediate values]
- *
- **************************************************/
-
-/* Reference: Not present in the reference implementation @[REF]. */
+ * @param[out] ptr Buffer to be zeroed.
+ * @param      len Number of bytes to be zeroed.
+ */
 #if !defined(MLK_CONFIG_CUSTOM_ZEROIZE)
 #if defined(MLK_SYS_WINDOWS)
 #include <windows.h>
@@ -431,13 +430,13 @@ __contract__(
   requires(memory_no_alias(ptr, len))
   assigns(memory_slice(ptr, len)))
 {
-  memset(ptr, 0, len);
+  mlk_memset(ptr, 0, len);
   /* This follows OpenSSL and seems sufficient to prevent the compiler
    * from optimizing away the memset.
    *
    * If there was a reliable way to detect availability of memset_s(),
    * that would be preferred. */
-  __asm__ __volatile__("" : : "r"(ptr) : "memory");
+  __asm__ volatile("" : : "r"(ptr) : "memory");
 }
 #else /* !MLK_SYS_WINDOWS && MLK_HAVE_INLINE_ASM */
 #error No plausibly-secure implementation of mlk_zeroize available. Please provide your own using MLK_CONFIG_CUSTOM_ZEROIZE.

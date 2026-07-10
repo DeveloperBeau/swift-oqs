@@ -20,6 +20,15 @@
 #error "__BYTE_ORDER__ defined, but don't recognize value."
 #endif
 #endif /* __BYTE_ORDER__ */
+
+/* MSVC does not define __BYTE_ORDER__. However, MSVC only supports
+ * little endian x86, x86_64, and AArch64. It is, hence, safe to assume
+ * little endian. */
+#if defined(_MSC_VER) && (defined(_M_X64) || defined(_M_AMD64) || \
+                          defined(_M_IX86) || defined(_M_ARM64))
+#define MLK_SYS_LITTLE_ENDIAN
+#endif
+
 #endif /* !MLK_SYS_LITTLE_ENDIAN && !MLK_SYS_BIG_ENDIAN */
 
 /* Check if we're running on an AArch64 little endian system. _M_ARM64 is set by
@@ -33,12 +42,18 @@
 #define MLK_SYS_AARCH64_EB
 #endif
 
-#if defined(__x86_64__)
+/* Check if we're running on an Armv8.1-M system with MVE */
+#if defined(__ARM_ARCH_8_1M_MAIN__) || defined(__ARM_FEATURE_MVE)
+#define MLK_SYS_ARMV81M_MVE
+#endif
+
+/* Check if we're running on an x86_64 system. */
+#if defined(__x86_64__) || defined(_M_X64) || defined(_M_AMD64)
 #define MLK_SYS_X86_64
 #if defined(__AVX2__)
 #define MLK_SYS_X86_64_AVX2
 #endif
-#endif /* __x86_64__ */
+#endif /* __x86_64__ || _M_X64 || _M_AMD64 */
 
 #if defined(MLK_SYS_LITTLE_ENDIAN) && defined(__powerpc64__)
 #define MLK_SYS_PPC64LE
@@ -48,12 +63,25 @@
 #define MLK_SYS_RISCV64
 #endif
 
+#if defined(MLK_SYS_RISCV64) && defined(__riscv_vector) && \
+    defined(__riscv_v_intrinsic)
+#define MLK_SYS_RISCV64_RVV
+#endif
+
 #if defined(__riscv) && defined(__riscv_xlen) && __riscv_xlen == 32
 #define MLK_SYS_RISCV32
 #endif
 
 #if defined(_WIN32)
 #define MLK_SYS_WINDOWS
+#endif
+
+#if defined(__linux__)
+#define MLK_SYS_LINUX
+#endif
+
+#if defined(__APPLE__)
+#define MLK_SYS_APPLE
 #endif
 
 #if defined(MLK_FORCE_AARCH64) && !defined(MLK_SYS_AARCH64)
@@ -82,34 +110,62 @@
 #endif
 
 /*
- * C90 does not have the inline compiler directive yet.
- * We don't use it in C90 builds.
- * However, in that case the compiler warns about some inline functions in
- * header files not being used in every compilation unit that includes that
- * header. To work around it we silence that warning in that case using
- * __attribute__((unused)).
+ * MLK_INLINE: Hint for inlining.
+ * - MSVC: __inline
+ * - C99+: inline
+ * - GCC/Clang C90: __attribute__((unused)) to silence warnings
+ * - Other C90: empty
  */
-
-/* Do not use inline for C90 builds*/
 #if !defined(MLK_INLINE)
-#if !defined(inline)
 #if defined(_MSC_VER)
 #define MLK_INLINE __inline
-/* Don't combine __inline and __forceinline */
-#define MLK_ALWAYS_INLINE __forceinline
-#elif defined(__STDC_VERSION__) && __STDC_VERSION__ >= 199901L
+#elif defined(inline) || \
+    (defined(__STDC_VERSION__) && __STDC_VERSION__ >= 199901L)
 #define MLK_INLINE inline
+#elif defined(__GNUC__) || defined(__clang__)
+#define MLK_INLINE __attribute__((unused))
+#else
+#define MLK_INLINE
+#endif
+#endif /* !MLK_INLINE */
+
+/*
+ * MLK_ALWAYS_INLINE: Force inlining.
+ * - MSVC: __forceinline
+ * - GCC/Clang C99+: MLK_INLINE __attribute__((always_inline))
+ * - Other: MLK_INLINE (no forced inlining)
+ */
+#if !defined(MLK_ALWAYS_INLINE)
+#if defined(_MSC_VER)
+#define MLK_ALWAYS_INLINE __forceinline
+#elif (defined(__GNUC__) || defined(__clang__)) && \
+    (defined(inline) ||                            \
+     (defined(__STDC_VERSION__) && __STDC_VERSION__ >= 199901L))
 #define MLK_ALWAYS_INLINE MLK_INLINE __attribute__((always_inline))
 #else
-#define MLK_INLINE __attribute__((unused))
 #define MLK_ALWAYS_INLINE MLK_INLINE
 #endif
+#endif /* !MLK_ALWAYS_INLINE */
 
-#else /* !inline */
-#define MLK_INLINE inline
-#define MLK_ALWAYS_INLINE MLK_INLINE __attribute__((always_inline))
-#endif /* inline */
-#endif /* !MLK_INLINE */
+/*
+ * MLK_NOINLINE: Prevent inlining.
+ * - MSVC: __declspec(noinline)
+ * - GCC/Clang: __attribute__((noinline))
+ * - Other: empty
+ */
+#if !defined(MLK_NOINLINE)
+#if defined(_MSC_VER)
+#define MLK_NOINLINE __declspec(noinline)
+#elif defined(__GNUC__) || defined(__clang__)
+#define MLK_NOINLINE __attribute__((noinline))
+#else
+#define MLK_NOINLINE
+#endif
+#endif /* !MLK_NOINLINE */
+
+#ifndef MLK_STATIC_TESTABLE
+#define MLK_STATIC_TESTABLE static
+#endif
 
 /*
  * C90 does not have the restrict compiler directive yet.
@@ -181,10 +237,66 @@
   } while (0)
 #endif /* !(MLK_CONFIG_CT_TESTING_ENABLED && !__ASSEMBLER__) */
 
-#if defined(__GNUC__) || defined(clang)
+#if defined(__GNUC__) || defined(__clang__)
 #define MLK_MUST_CHECK_RETURN_VALUE __attribute__((warn_unused_result))
 #else
 #define MLK_MUST_CHECK_RETURN_VALUE
 #endif
+
+/* The x86_64 assembly backend uses the SysV calling convention. On Windows,
+ * where the Microsoft x64 calling convention is the default, it can still be
+ * used with compilers that allow choosing the calling convention per
+ * function: GCC and Clang support __attribute__((sysv_abi)), which makes
+ * calls to the annotated function follow the SysV calling convention.
+ *
+ * MLK_SYSV_ABI_SUPPORTED signals that the toolchain can call SysV assembly
+ * routines; the x86_64 assembly backend is only enabled if it is defined.
+ * MLK_SYSV_ABI is the attribute carried by declarations of x86_64 assembly
+ * routines. Both macros can be set externally for toolchains offering an
+ * equivalent mechanism that is not recognized here. */
+#if defined(MLK_SYS_X86_64) && !defined(MLK_SYSV_ABI_SUPPORTED)
+#if !defined(MLK_SYS_WINDOWS) || defined(__GNUC__) || defined(__clang__)
+#define MLK_SYSV_ABI_SUPPORTED
+#endif
+#endif
+
+#if !defined(MLK_SYSV_ABI)
+#if defined(MLK_SYS_WINDOWS) && defined(MLK_SYSV_ABI_SUPPORTED)
+#define MLK_SYSV_ABI __attribute__((sysv_abi))
+#else
+#define MLK_SYSV_ABI
+#endif
+#endif /* !MLK_SYSV_ABI */
+
+#if !defined(__ASSEMBLER__)
+/* System capability enumeration */
+typedef enum
+{
+  /* x86_64 */
+  MLK_SYS_CAP_AVX2,
+  /* AArch64 */
+  MLK_SYS_CAP_SHA3
+} mlk_sys_cap;
+
+#if !defined(MLK_CONFIG_CUSTOM_CAPABILITY_FUNC)
+#include "cbmc.h"
+
+MLK_MUST_CHECK_RETURN_VALUE
+static MLK_INLINE int mlk_sys_check_capability(mlk_sys_cap cap)
+__contract__(
+  ensures(return_value == 0 || return_value == 1)
+)
+{
+  /* By default, we rely on compile-time feature detection/specification:
+   * If a feature is enabled at compile-time, we assume it is supported by
+   * the host that the resulting library/binary will be built on.
+   * If this assumption is not true, you MUST overwrite this function.
+   * See the documentation of MLK_CONFIG_CUSTOM_CAPABILITY_FUNC in
+   * mlkem_native_config.h for more information. */
+  (void)cap;
+  return 1;
+}
+#endif /* !MLK_CONFIG_CUSTOM_CAPABILITY_FUNC */
+#endif /* !__ASSEMBLER__ */
 
 #endif /* !MLK_SYS_H */
