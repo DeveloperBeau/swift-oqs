@@ -1,6 +1,16 @@
 import Foundation
 internal import Cliboqs
 
+/// Build-mode information for the stateful signature schemes (XMSS/XMSSMT/LMS).
+public enum StatefulSignatureSupport: Sendable {
+    /// Whether this build of liboqs supports stateful-signature key generation
+    /// and signing (a compile-time opt-in; enabled in this package's
+    /// oqsconfig.h). Verification is always available regardless.
+    public static var isKeyGenerationSupported: Bool {
+        OQS_SIG_STFL_keygen_and_sign_supported() == 1
+    }
+}
+
 /// Carries the user's persist closure and a caught-error slot across the C
 /// store-callback boundary.
 ///

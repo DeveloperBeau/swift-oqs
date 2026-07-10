@@ -41,4 +41,9 @@ internal import Cliboqs
             + LMS.Variant.allCases.count
         #expect(total == 70)
     }
+
+    @Test("Build supports stateful key generation and signing")
+    func keygenSupported() {
+        #expect(StatefulSignatureSupport.isKeyGenerationSupported)
+    }
 }
