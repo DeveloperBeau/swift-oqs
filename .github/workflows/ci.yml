@@ -34,6 +34,30 @@ jobs:
       - name: Test (deterministic KAT, serial)
         run: swift test -v --no-parallel --filter KATTests
 
+  parity:
+    # Differential parity: every enabled algorithm, raw C API vs the Swift FFI
+    # layer, byte-identical under the deterministic KAT seed, plus the frozen
+    # full-coverage snapshot (macOS arm64 is the reference platform). The full
+    # set takes ~12 min in one process; four shards run in parallel
+    # (per-operation reseeding makes the split exact — see ParityTests.swift).
+    name: Parity (shard ${{ matrix.shard }})
+    runs-on: macos-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0, 1, 2, 3]
+    steps:
+      - uses: actions/checkout@v6
+      - uses: DeveloperBeau/resolve-swift@v2
+        with:
+          swift-version: '6.3'
+      - name: Parity sweep
+        env:
+          OQS_PARITY: '1'
+          OQS_SHARD: ${{ matrix.shard }}
+          OQS_TOTAL: '4'
+        run: swift test --no-parallel --filter ParityTests
+
   android:
     name: Android
     runs-on: ubuntu-latest

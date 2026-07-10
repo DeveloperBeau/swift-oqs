@@ -173,6 +173,18 @@ echo "0.16.0" > LIBOQS_VERSION
 swift build && swift test
 ```
 
+## Testing
+
+Three tiers:
+
+```bash
+swift test --skip KATTests                          # functional: keygen + roundtrip per variant
+swift test --no-parallel --filter KATTests          # deterministic KAT digests (global RNG, serial)
+OQS_PARITY=1 swift test --no-parallel --filter ParityTests   # full differential parity (~12 min)
+```
+
+The parity sweep runs every enabled algorithm (262: 41 KEMs × 5 fields, 221 signatures × 3 fields — 868 buffers) through both the raw C API and the Swift wrapper under the deterministic KAT seed and requires byte-identical output, then checks each algorithm's digest against the frozen reference snapshot (`Tests/OQSTests/Vectors/parity_snapshot.txt`, regenerated at vendor bumps with `OQS_PARITY_WRITE_SNAPSHOT=1`). CI shards it four ways via `OQS_SHARD`/`OQS_TOTAL`.
+
 ## License
 
 MIT. See [LICENSE](LICENSE).
