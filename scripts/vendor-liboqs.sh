@@ -8,12 +8,28 @@ DEST="$REPO_ROOT/Sources/Cliboqs"
 
 echo "Vendoring liboqs $VERSION..."
 
+# Hand-maintained files preserved across re-vendoring (paths relative to
+# $DEST). None have an upstream counterpart in the release tarball: oqsconfig.h
+# is our build config, oqs_safe.h is ours (SafeInteropWrappers), and
+# mlkem-native's config.h is hand-added. (oqs.h is NOT preserved — it is
+# regenerated below from the vendored header set.)
+PRESERVE=(
+    "include/oqs/oqsconfig.h"
+    "include/oqs/oqs_safe.h"
+    "src/kem/ml_kem/mlkem-native_ml-kem-512_ref/mlkem/src/config.h"
+    "src/kem/ml_kem/mlkem-native_ml-kem-768_ref/mlkem/src/config.h"
+    "src/kem/ml_kem/mlkem-native_ml-kem-1024_ref/mlkem/src/config.h"
+)
+BACKUP=$(mktemp -d)
+for rel in "${PRESERVE[@]}"; do
+    if [ -f "$DEST/$rel" ]; then
+        mkdir -p "$BACKUP/$(dirname "$rel")"
+        cp "$DEST/$rel" "$BACKUP/$rel"
+    fi
+done
+
 if [ -d "$DEST/src" ]; then
     rm -rf "$DEST/src"
-fi
-# Preserve oqsconfig.h (manually maintained) across re-vendoring
-if [ -f "$DEST/include/oqs/oqsconfig.h" ]; then
-    cp "$DEST/include/oqs/oqsconfig.h" "$DEST/include/oqsconfig.h.bak"
 fi
 if [ -d "$DEST/include/oqs" ]; then
     rm -rf "$DEST/include/oqs"
@@ -34,7 +50,6 @@ cp -R "$LIBOQS_SRC/sig_stfl" "$DEST/src/"
 mkdir -p "$DEST/include/oqs"
 
 # Core public headers
-cp "$LIBOQS_SRC/oqs.h" "$DEST/include/oqs/"
 cp "$LIBOQS_SRC/common/common.h" "$DEST/include/oqs/"
 cp "$LIBOQS_SRC/common/rand/rand.h" "$DEST/include/oqs/"
 cp "$LIBOQS_SRC/common/rand/rand_nist.h" "$DEST/include/oqs/" 2>/dev/null || true
@@ -64,6 +79,61 @@ for dir in "$LIBOQS_SRC"/sig/*/; do
     done
 done
 
+# Regenerate the umbrella header from the vendored header set. Upstream's
+# oqs.h only includes kem.h/sig.h/sig_stfl.h; the Swift module needs every
+# public header pulled in, and the per-algorithm set changes across releases,
+# so it is derived here rather than hand-patched or copied from upstream.
+{
+    cat <<'EOF'
+/**
+ * \file oqs.h
+ * \brief Overall header file for the liboqs public API.
+ *
+ * C programs using liboqs can include just this one file, and it will include all
+ * other necessary headers from liboqs.
+ *
+ * SPDX-License-Identifier: MIT
+ */
+
+#ifndef OQS_H
+#define OQS_H
+
+#include <oqs/oqsconfig.h>
+
+#include <oqs/common.h>
+#include <oqs/rand.h>
+EOF
+    [ -f "$DEST/include/oqs/rand_nist.h" ] && echo "#include <oqs/rand_nist.h>"
+    cat <<'EOF'
+
+#include <oqs/aes.h>
+#include <oqs/aes_ops.h>
+#include <oqs/sha2.h>
+#include <oqs/sha2_ops.h>
+#include <oqs/sha3.h>
+#include <oqs/sha3_ops.h>
+#include <oqs/sha3x4.h>
+#include <oqs/sha3x4_ops.h>
+
+#include <oqs/kem.h>
+EOF
+    for h in "$DEST/include/oqs"/kem_*.h; do
+        echo "#include <oqs/$(basename "$h")>"
+    done
+    echo ""
+    echo "#include <oqs/sig.h>"
+    for h in "$DEST/include/oqs"/sig_*.h; do
+        case "$(basename "$h")" in sig_stfl*) continue ;; esac
+        echo "#include <oqs/$(basename "$h")>"
+    done
+    echo ""
+    echo "#include <oqs/sig_stfl.h>"
+    echo "#include <oqs/sig_stfl_lms.h>"
+    echo "#include <oqs/sig_stfl_xmss.h>"
+    echo ""
+    echo "#endif // OQS_H"
+} > "$DEST/include/oqs/oqs.h"
+
 # generate_unity <family_dir> <variant_dir_glob> [extra_defines...]
 # Emits one unity_<variant>.c per matching variant directory that #includes
 # every .c file directly inside that directory (non-recursive). Concatenating
@@ -79,8 +149,10 @@ generate_unity() {
     local glob="$1"; shift
     local defines=("$@")
     local vdir base unity f d
+    local matched=0
     for vdir in "$DEST/$family_dir"/$glob; do
         [ -d "$vdir" ] || continue
+        matched=1
         base="$(basename "$vdir")"
         unity="$DEST/$family_dir/unity_${base}.c"
         {
@@ -93,6 +165,10 @@ generate_unity() {
         } > "$unity"
         echo "  generated $unity"
     done
+    if [ "$matched" -eq 0 ]; then
+        echo "error: no variant directory matched $family_dir/$glob — upstream renamed or removed it; update this script" >&2
+        exit 1
+    fi
 }
 
 # ML-DSA variants select their namespace from DILITHIUM_MODE (CMake
@@ -207,13 +283,16 @@ generate_xmss_unity() {
     # Parse: each variant is an add_library line naming its variant .c +
     # sig_stfl_xmss[mt]_functions.c, immediately followed (next non-blank) by a
     # target_compile_options line carrying -DXMSS_PARAMS_NAMESPACE=<ns> -DHASH=<n>.
-    local variant_file="" funcs_file="" ns="" hash=""
+    local variant_file="" funcs_file="" ns="" hash="" emitted=0
     while IFS= read -r line; do
         case "$line" in
             *add_library*OBJECT*)
                 # e.g. add_library(xmss_sha256_h10 OBJECT sig_stfl_xmss_sha256_h10.c sig_stfl_xmss_functions.c ${SRCS})
-                variant_file="$(printf '%s\n' "$line" | grep -oE 'sig_stfl_xmss(mt)?_[a-z0-9_]+\.c' | grep -vE 'functions\.c' | head -1)"
-                funcs_file="$(printf '%s\n' "$line" | grep -oE 'sig_stfl_xmss(mt)?_functions\.c' | head -1)"
+                # `|| true`: helper targets (e.g. sig_stfl_xmss_secret_key_functions)
+                # match the case but yield no variant file — grep's no-match exit 1
+                # would kill the script under pipefail. Empty vars just skip emission.
+                variant_file="$(printf '%s\n' "$line" | grep -oE 'sig_stfl_xmss(mt)?_[a-z0-9_]+\.c' | grep -vE 'functions\.c' | head -1 || true)"
+                funcs_file="$(printf '%s\n' "$line" | grep -oE 'sig_stfl_xmss(mt)?_functions\.c' | head -1 || true)"
                 ;;
             *target_compile_options*XMSS_PARAMS_NAMESPACE*)
                 ns="$(printf '%s\n' "$line" | grep -oE 'XMSS_PARAMS_NAMESPACE=[a-z0-9_]+' | cut -d= -f2)"
@@ -230,11 +309,16 @@ generate_xmss_unity() {
                         for s in "${srcs[@]}"; do echo "#include \"external/$s\""; done
                     } > "$out"
                     echo "  generated $out (ns=$ns HASH=$hash)"
+                    emitted=$((emitted + 1))
                 fi
                 variant_file=""; funcs_file=""; ns=""; hash=""
                 ;;
         esac
     done < "$cmake"
+    if [ "$emitted" -eq 0 ]; then
+        echo "error: parsed no XMSS variants from $cmake — upstream CMakeLists format changed; update this script" >&2
+        exit 1
+    fi
 }
 
 generate_xmss_unity
@@ -249,10 +333,19 @@ fi
 
 rm -rf "$TMPDIR"
 
-# Restore oqsconfig.h
-if [ -f "$DEST/include/oqsconfig.h.bak" ]; then
-    cp "$DEST/include/oqsconfig.h.bak" "$DEST/include/oqs/oqsconfig.h"
-    rm "$DEST/include/oqsconfig.h.bak"
-fi
+# Restore hand-maintained files over the freshly vendored tree. A preserved
+# file whose destination directory no longer exists means upstream renamed the
+# layout out from under us — fail loudly rather than drop the file.
+for rel in "${PRESERVE[@]}"; do
+    if [ -f "$BACKUP/$rel" ]; then
+        if [ -d "$DEST/$(dirname "$rel")" ]; then
+            cp "$BACKUP/$rel" "$DEST/$rel"
+        else
+            echo "error: preserved $rel has no destination directory after re-vendor — upstream layout changed; update this script" >&2
+            exit 1
+        fi
+    fi
+done
+rm -rf "$BACKUP"
 
 echo "Done. Vendored liboqs $VERSION into $DEST"
