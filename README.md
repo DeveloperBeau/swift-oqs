@@ -7,7 +7,7 @@ Post-quantum cryptography for Swift, powered by [liboqs](https://github.com/open
 ## Features
 
 - Type-safe Swift API for key encapsulation and digital signatures
-- Full liboqs algorithm coverage: ML-KEM, FrodoKEM, NTRU, Classic McEliece, HQC, BIKE; ML-DSA, Falcon, SPHINCS+, SLH-DSA, CROSS, MAYO, SNOVA, UOV, and stateful XMSS/LMS
+- Full liboqs algorithm coverage: ML-KEM, FrodoKEM/eFrodoKEM, NTRU, Classic McEliece, HQC, BIKE; ML-DSA, Falcon, SLH-DSA, CROSS, MAYO, SNOVA, UOV, MQOM2, and stateful XMSS/LMS
 - Vendored liboqs C source, no system dependencies. Just add the package
 - Swift 6 strict concurrency (`Sendable` throughout)
 - macOS, Linux, Windows, and Android
@@ -26,7 +26,7 @@ The algorithms in this library are built on math that quantum computers can't cr
 | **Classic McEliece** | Error-correcting codes (studied for 50+ years) | Key exchange |
 | **HQC** | Error-correcting codes | Key exchange |
 | **Falcon** | Lattice problems | Signatures |
-| **SPHINCS+ / SLH-DSA** | Just hash functions, no fancy math to break | Signatures |
+| **SLH-DSA** | Just hash functions, no fancy math to break | Signatures |
 | **CROSS** | Error-correcting codes | Signatures |
 
 NIST picked these after 8 years of public evaluation. They're the real deal.
@@ -102,18 +102,19 @@ let valid = try signingKey.publicKey.isValidSignature(signature, for: message)
 
 ## Algorithms
 
-Every liboqs 0.15.0 algorithm has its own Swift type with a `PrivateKey` and `PublicKey`.
+Every liboqs 0.16.0 algorithm has its own Swift type with a `PrivateKey` and `PublicKey`.
 
 ### Key encapsulation
 
 | Family | Types |
 |---|---|
 | ML-KEM (FIPS 203) | `MLKEM512`, `MLKEM768`, `MLKEM1024` |
-| FrodoKEM | `FrodoKEM640AES`, `FrodoKEM640SHAKE`, `FrodoKEM976AES`, `FrodoKEM976SHAKE`, `FrodoKEM1344AES`, `FrodoKEM1344SHAKE` |
+| FrodoKEM (salted) | `FrodoKEM640AES`, `FrodoKEM640SHAKE`, `FrodoKEM976AES`, `FrodoKEM976SHAKE`, `FrodoKEM1344AES`, `FrodoKEM1344SHAKE` |
+| eFrodoKEM (ephemeral, the pre-0.16.0 FrodoKEM) | `EFrodoKEM640AES`, `EFrodoKEM640SHAKE`, `EFrodoKEM976AES`, `EFrodoKEM976SHAKE`, `EFrodoKEM1344AES`, `EFrodoKEM1344SHAKE` |
 | NTRU | `NTRUHPS2048509`, `NTRUHPS2048677`, `NTRUHPS4096821`, `NTRUHPS40961229`, `NTRUHRSS701`, `NTRUHRSS1373` |
 | NTRU Prime | `SNTRUP761` |
 | Classic McEliece | `ClassicMcEliece348864`, `ClassicMcEliece460896`, `ClassicMcEliece6688128`, `ClassicMcEliece6960119`, `ClassicMcEliece8192128`, plus the fast-keygen `…f` variants (`ClassicMcEliece348864f`, etc.) |
-| HQC | `HQC128`, `HQC192`, `HQC256` |
+| HQC (20250822 spec) | `HQC1`, `HQC3`, `HQC5` |
 | BIKE | `BIKEL1`, `BIKEL3`, `BIKEL5` |
 | Kyber (**deprecated**) | `Kyber512`, `Kyber768`, `Kyber1024`. Superseded by ML-KEM; reach for the `MLKEM*` types instead |
 
@@ -123,12 +124,12 @@ Every liboqs 0.15.0 algorithm has its own Swift type with a `PrivateKey` and `Pu
 |---|---|
 | ML-DSA (FIPS 204) | `MLDSA44`, `MLDSA65`, `MLDSA87` |
 | Falcon | `Falcon512`, `Falcon1024`, `FalconPadded512`, `FalconPadded1024` |
-| SPHINCS+ | 12 SHA2 and SHAKE `…Simple` variants at 128/192/256-bit security |
 | SLH-DSA (FIPS 205) | 12 pure SHA2/SHAKE variants (`SLHDSAPureSHA2128s`, etc.), plus a parameterized `SLHDSA.Prehash` covering all 144 pre-hash function × parameter-set combinations |
 | CROSS | 18 RSDP and RSDPG Balanced/Fast/Small variants at 128/192/256-bit security |
 | MAYO | `MAYO1`, `MAYO2`, `MAYO3`, `MAYO5` |
 | SNOVA | 12 parameter sets (`SNOVA24_5_4`, …, including SHAKE and `_esk` variants) |
 | UOV | 12 parameter sets (`OVIs`, `OVIp`, `OVIII`, `OVV`, plus their `PKC` / `PKCSKC` variants) |
+| MQOM2 | 12 parameter sets (`MQOM2Cat1GF16FastR3`, …: cat1/3/5 × fast/short × r3/r5) |
 
 > ML-KEM (FIPS 203), ML-DSA (FIPS 204), and SLH-DSA (FIPS 205) are the NIST-standardized schemes. The other families are additional NIST round candidates and alternates.
 
@@ -162,7 +163,7 @@ Large parameter sets (XMSS/XMSS^MT height-16 and height-20 trees, and the bigger
 
 ## Vendored liboqs
 
-liboqs **0.15.0** is vendored as C source. No pre-built binaries, no system installs.
+liboqs **0.16.0** is vendored as C source. No pre-built binaries, no system installs.
 
 A GitHub Action checks for new liboqs releases weekly and opens a PR automatically. To update manually:
 

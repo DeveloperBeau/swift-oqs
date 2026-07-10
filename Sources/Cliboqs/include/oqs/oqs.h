@@ -41,9 +41,9 @@
 #include <oqs/sig_falcon.h>
 #include <oqs/sig_mayo.h>
 #include <oqs/sig_ml_dsa.h>
+#include <oqs/sig_mqom.h>
 #include <oqs/sig_slh_dsa.h>
 #include <oqs/sig_snova.h>
-#include <oqs/sig_sphincs.h>
 #include <oqs/sig_uov.h>
 
 #include <oqs/sig_stfl.h>

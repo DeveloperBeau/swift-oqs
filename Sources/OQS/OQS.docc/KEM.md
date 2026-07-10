@@ -68,12 +68,28 @@ let importedPub = try MLKEM768.PublicKey(rawRepresentation: pubData)
 
 ### FrodoKEM
 
+Salted FrodoKEM (liboqs 0.16.0+), for keypairs that encapsulate many
+ciphertexts. Not interoperable with the pre-0.16.0 FrodoKEM, which lives on
+as eFrodoKEM below.
+
 - ``FrodoKEM640AES``
 - ``FrodoKEM640SHAKE``
 - ``FrodoKEM976AES``
 - ``FrodoKEM976SHAKE``
 - ``FrodoKEM1344AES``
 - ``FrodoKEM1344SHAKE``
+
+### eFrodoKEM
+
+Ephemeral FrodoKEM: the pre-0.16.0 FrodoKEM algorithm, for keypairs that
+encapsulate only a few ciphertexts.
+
+- ``EFrodoKEM640AES``
+- ``EFrodoKEM640SHAKE``
+- ``EFrodoKEM976AES``
+- ``EFrodoKEM976SHAKE``
+- ``EFrodoKEM1344AES``
+- ``EFrodoKEM1344SHAKE``
 
 ### NTRU
 
@@ -90,9 +106,12 @@ let importedPub = try MLKEM768.PublicKey(rawRepresentation: pubData)
 
 ### HQC
 
-- ``HQC128``
-- ``HQC192``
-- ``HQC256``
+HQC implements the 20250822 specification (liboqs 0.16.0+). It is not
+interoperable with the pre-0.16.0 HQC-128/192/256 parameter sets.
+
+- ``HQC1``
+- ``HQC3``
+- ``HQC5``
 
 ### Classic McEliece
 

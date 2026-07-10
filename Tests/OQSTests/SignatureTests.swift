@@ -48,20 +48,155 @@ private let testMessage = Data("Post-quantum cryptography is fun.".utf8)
         #expect(valid)
     }
 
-    @Test("SPHINCS+-SHA2-128f-simple sign/verify")
-    func roundTripSPHINCS() throws {
-        let signingKey = try SPHINCSSHA2128fSimple.PrivateKey()
-        let sig = try signingKey.signature(for: testMessage)
-        let valid = try signingKey.publicKey.isValidSignature(sig, for: testMessage)
-        #expect(valid)
-    }
-
     @Test("SLH-DSA-Pure-SHA2-128f sign/verify")
     func roundTripSLHDSA() throws {
         let signingKey = try SLHDSAPureSHA2128f.PrivateKey()
         let sig = try signingKey.signature(for: testMessage)
         let valid = try signingKey.publicKey.isValidSignature(sig, for: testMessage)
         #expect(valid)
+    }
+
+    @Test("mqom2_cat1_gf16_fast_r3 sign/verify")
+    func roundTripMQOM2Cat1FastR3() throws {
+        // MQOM2 signing overflows the 512 KB test-worker stack (SIGBUS).
+        let valid = try onLargeStack { [testMessage] in
+            let signingKey = try MQOM2Cat1GF16FastR3.PrivateKey()
+            let sig = try signingKey.signature(for: testMessage)
+            return try signingKey.publicKey.isValidSignature(sig, for: testMessage)
+        }
+        #expect(valid)
+    }
+
+    @Test("mqom2_cat1_gf16_fast_r5 sign/verify")
+    func roundTripMQOM2Cat1FastR5() throws {
+        // MQOM2 signing overflows the 512 KB test-worker stack (SIGBUS).
+        let valid = try onLargeStack { [testMessage] in
+            let signingKey = try MQOM2Cat1GF16FastR5.PrivateKey()
+            let sig = try signingKey.signature(for: testMessage)
+            return try signingKey.publicKey.isValidSignature(sig, for: testMessage)
+        }
+        #expect(valid)
+    }
+
+    @Test("mqom2_cat1_gf16_short_r3 sign/verify")
+    func roundTripMQOM2Cat1ShortR3() throws {
+        // MQOM2 signing overflows the 512 KB test-worker stack (SIGBUS).
+        let valid = try onLargeStack { [testMessage] in
+            let signingKey = try MQOM2Cat1GF16ShortR3.PrivateKey()
+            let sig = try signingKey.signature(for: testMessage)
+            return try signingKey.publicKey.isValidSignature(sig, for: testMessage)
+        }
+        #expect(valid)
+    }
+
+    @Test("mqom2_cat1_gf16_short_r5 sign/verify")
+    func roundTripMQOM2Cat1ShortR5() throws {
+        // MQOM2 signing overflows the 512 KB test-worker stack (SIGBUS).
+        let valid = try onLargeStack { [testMessage] in
+            let signingKey = try MQOM2Cat1GF16ShortR5.PrivateKey()
+            let sig = try signingKey.signature(for: testMessage)
+            return try signingKey.publicKey.isValidSignature(sig, for: testMessage)
+        }
+        #expect(valid)
+    }
+
+    @Test("mqom2_cat3_gf16_fast_r3 sign/verify")
+    func roundTripMQOM2Cat3FastR3() throws {
+        // MQOM2 signing overflows the 512 KB test-worker stack (SIGBUS).
+        let valid = try onLargeStack { [testMessage] in
+            let signingKey = try MQOM2Cat3GF16FastR3.PrivateKey()
+            let sig = try signingKey.signature(for: testMessage)
+            return try signingKey.publicKey.isValidSignature(sig, for: testMessage)
+        }
+        #expect(valid)
+    }
+
+    @Test("mqom2_cat3_gf16_fast_r5 sign/verify")
+    func roundTripMQOM2Cat3FastR5() throws {
+        // MQOM2 signing overflows the 512 KB test-worker stack (SIGBUS).
+        let valid = try onLargeStack { [testMessage] in
+            let signingKey = try MQOM2Cat3GF16FastR5.PrivateKey()
+            let sig = try signingKey.signature(for: testMessage)
+            return try signingKey.publicKey.isValidSignature(sig, for: testMessage)
+        }
+        #expect(valid)
+    }
+
+    @Test("mqom2_cat3_gf16_short_r3 sign/verify")
+    func roundTripMQOM2Cat3ShortR3() throws {
+        // MQOM2 signing overflows the 512 KB test-worker stack (SIGBUS).
+        let valid = try onLargeStack { [testMessage] in
+            let signingKey = try MQOM2Cat3GF16ShortR3.PrivateKey()
+            let sig = try signingKey.signature(for: testMessage)
+            return try signingKey.publicKey.isValidSignature(sig, for: testMessage)
+        }
+        #expect(valid)
+    }
+
+    @Test("mqom2_cat3_gf16_short_r5 sign/verify")
+    func roundTripMQOM2Cat3ShortR5() throws {
+        // MQOM2 signing overflows the 512 KB test-worker stack (SIGBUS).
+        let valid = try onLargeStack { [testMessage] in
+            let signingKey = try MQOM2Cat3GF16ShortR5.PrivateKey()
+            let sig = try signingKey.signature(for: testMessage)
+            return try signingKey.publicKey.isValidSignature(sig, for: testMessage)
+        }
+        #expect(valid)
+    }
+
+    @Test("mqom2_cat5_gf16_fast_r3 sign/verify")
+    func roundTripMQOM2Cat5FastR3() throws {
+        // MQOM2 signing overflows the 512 KB test-worker stack (SIGBUS).
+        let valid = try onLargeStack { [testMessage] in
+            let signingKey = try MQOM2Cat5GF16FastR3.PrivateKey()
+            let sig = try signingKey.signature(for: testMessage)
+            return try signingKey.publicKey.isValidSignature(sig, for: testMessage)
+        }
+        #expect(valid)
+    }
+
+    @Test("mqom2_cat5_gf16_fast_r5 sign/verify")
+    func roundTripMQOM2Cat5FastR5() throws {
+        // MQOM2 signing overflows the 512 KB test-worker stack (SIGBUS).
+        let valid = try onLargeStack { [testMessage] in
+            let signingKey = try MQOM2Cat5GF16FastR5.PrivateKey()
+            let sig = try signingKey.signature(for: testMessage)
+            return try signingKey.publicKey.isValidSignature(sig, for: testMessage)
+        }
+        #expect(valid)
+    }
+
+    @Test("mqom2_cat5_gf16_short_r3 sign/verify")
+    func roundTripMQOM2Cat5ShortR3() throws {
+        // MQOM2 signing overflows the 512 KB test-worker stack (SIGBUS).
+        let valid = try onLargeStack { [testMessage] in
+            let signingKey = try MQOM2Cat5GF16ShortR3.PrivateKey()
+            let sig = try signingKey.signature(for: testMessage)
+            return try signingKey.publicKey.isValidSignature(sig, for: testMessage)
+        }
+        #expect(valid)
+    }
+
+    @Test("mqom2_cat5_gf16_short_r5 sign/verify")
+    func roundTripMQOM2Cat5ShortR5() throws {
+        // MQOM2 signing overflows the 512 KB test-worker stack (SIGBUS).
+        let valid = try onLargeStack { [testMessage] in
+            let signingKey = try MQOM2Cat5GF16ShortR5.PrivateKey()
+            let sig = try signingKey.signature(for: testMessage)
+            return try signingKey.publicKey.isValidSignature(sig, for: testMessage)
+        }
+        #expect(valid)
+    }
+
+    @Test("mqom2_cat1_gf16_fast_r3 rejects tampered signature")
+    func mqom2RejectsTampered() throws {
+        let valid = try onLargeStack { [testMessage] in
+            let signingKey = try MQOM2Cat1GF16FastR3.PrivateKey()
+            var sig = try signingKey.signature(for: testMessage)
+            sig[sig.count / 2] ^= 0xFF
+            return try signingKey.publicKey.isValidSignature(sig, for: testMessage)
+        }
+        #expect(!valid)
     }
 
     @Test("ML-DSA-44 sign/verify")

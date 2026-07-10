@@ -23,15 +23,17 @@
 #include "debug.h"
 #include "sampling.h"
 #include "symmetric.h"
+#include "verify.h"
 
 /* Reference: `rej_uniform()` in the reference implementation @[REF].
  *            - Our signature differs from the reference implementation
  *              in that it adds the offset and always expects the base of the
  *              target buffer. This avoids shifting the buffer base in the
  *              caller, which appears tricky to reason about. */
-static unsigned mlk_rej_uniform_scalar(int16_t *r, unsigned target,
-                                       unsigned offset, const uint8_t *buf,
-                                       unsigned buflen)
+MLK_STATIC_TESTABLE unsigned mlk_rej_uniform_c(int16_t *r, unsigned target,
+                                               unsigned offset,
+                                               const uint8_t *buf,
+                                               unsigned buflen)
 __contract__(
   requires(offset <= target && target <= 4096 && buflen <= 4096 && buflen % 3 == 0)
   requires(memory_no_alias(r, sizeof(int16_t) * target))
@@ -39,11 +41,10 @@ __contract__(
   requires(array_bound(r, 0, offset, 0, MLKEM_Q))
   assigns(memory_slice(r, sizeof(int16_t) * target))
   ensures(offset <= return_value && return_value <= target)
-  ensures(array_bound(r, 0, return_value, 0, MLKEM_Q))
-)
+  ensures(array_bound(r, 0, return_value, 0, MLKEM_Q)))
 {
   unsigned ctr, pos;
-  uint16_t val0, val1;
+  int16_t val0, val1;
 
   mlk_assert_bound(r, offset, 0, MLKEM_Q);
 
@@ -53,10 +54,18 @@ __contract__(
   while (ctr < target && pos + 3 <= buflen)
   __loop__(
     invariant(offset <= ctr && ctr <= target && pos <= buflen)
-    invariant(array_bound(r, 0, ctr, 0, MLKEM_Q)))
+    invariant(array_bound(r, 0, ctr, 0, MLKEM_Q))
+    decreases(buflen - pos))
   {
-    val0 = ((buf[pos + 0] >> 0) | ((uint16_t)buf[pos + 1] << 8)) & 0xFFF;
-    val1 = ((buf[pos + 1] >> 4) | ((uint16_t)buf[pos + 2] << 4)) & 0xFFF;
+    /* Safety:
+     * - The explicit cast to uint16_t ensures that << 8 does
+     *   not signed-overflow even on a 16-bit system.
+     * - The conversion to int16_t is safe due to the explicit 0xFFF
+     *   truncation.
+     */
+    val0 = (int16_t)(((buf[pos + 0] >> 0) | ((uint16_t)buf[pos + 1] << 8)) &
+                     0xFFF);
+    val1 = (int16_t)(((buf[pos + 1] >> 4) | (buf[pos + 2] << 4)) & 0xFFF);
     pos += 3;
 
     if (val0 < MLKEM_Q)
@@ -73,42 +82,36 @@ __contract__(
   return ctr;
 }
 
-/*************************************************
- * Name:        mlk_rej_uniform
+/**
+ * Run rejection sampling on uniform random bytes to generate uniform random
+ * integers mod MLKEM_Q.
  *
- * Description: Run rejection sampling on uniform random bytes to generate
- *              uniform random integers mod q
+ * @reference{`rej_uniform()` in the reference implementation @[REF]. Our
+ * signature differs from the reference in that it adds the offset and always
+ * expects the base of the target buffer; this avoids shifting the buffer
+ * base in the caller, which is tricky to reason about. Has an optional
+ * fallback to a native implementation.}
  *
- * Arguments:   - int16_t *r:          pointer to output buffer
- *              - unsigned target:     requested number of 16-bit integers
- *                                     (uniform mod q).
- *                                     Must be <= 4096.
- *              - unsigned offset:     number of 16-bit integers that have
- *                                     already been sampled.
- *                                     Must be <= target.
- *              - const uint8_t *buf:  pointer to input buffer
- *                                     (assumed to be uniform random bytes)
- *              - unsigned buflen:     length of input buffer in bytes
- *                                     Must be <= 4096.
- *                                     Must be a multiple of 3.
+ * @param[out] r      Output buffer.
+ * @param      target Requested number of 16-bit integers (uniform mod MLKEM_Q).
+ *                    Must be <= 4096.
+ * @param      offset Number of 16-bit integers that have already been
+ *                    sampled. Must be <= @p target.
+ * @param[in]  buf    Input buffer (assumed to be uniform random bytes).
+ * @param      buflen Length of input buffer in bytes. Must be <= 4096 and a
+ *                    multiple of 3.
  *
- * Note: Strictly speaking, only a few values of buflen near UINT_MAX need
- * excluding. The limit of 128 is somewhat arbitrary but sufficient for all
- * uses of this function. Similarly, the actual limit for target is UINT_MAX/2.
+ * @note Strictly speaking, only a few values of @p buflen near UINT_MAX need
+ *       excluding. The limit of 4096 is somewhat arbitrary but sufficient
+ *       for all uses of this function. Similarly, the actual limit for
+ *       @p target is UINT_MAX/2.
  *
- * Returns the new offset of sampled 16-bit integers, at most target,
- * and at least the initial offset.
- * If the new offset is strictly less than len, all of the input buffers
- * is guaranteed to have been consumed. If it is equal to len, no information
- * is provided on how many bytes of the input buffer have been consumed.
- **************************************************/
-
-/* Reference: `rej_uniform()` in the reference implementation @[REF].
- *            - Our signature differs from the reference implementation
- *              in that it adds the offset and always expects the base of the
- *              target buffer. This avoids shifting the buffer base in the
- *              caller, which appears tricky to reason about.
- *            - Optional fallback to native implementation. */
+ * @return New offset of sampled 16-bit integers, at most @p target and at
+ *         least the initial @p offset. If the new offset is strictly less
+ *         than @p target, the entire input buffer is guaranteed to have been
+ *         consumed; otherwise no information is provided on how many bytes
+ *         of the input buffer have been consumed.
+ */
 static unsigned mlk_rej_uniform(int16_t *r, unsigned target, unsigned offset,
                                 const uint8_t *buf, unsigned buflen)
 __contract__(
@@ -124,8 +127,9 @@ __contract__(
 #if defined(MLK_USE_NATIVE_REJ_UNIFORM)
   if (offset == 0)
   {
-    int ret = mlk_rej_uniform_native(r, target, buf, buflen);
-    if (ret != -1)
+    int ret;
+    ret = mlk_rej_uniform_native(r, target, buf, buflen);
+    if (ret != MLK_NATIVE_FUNC_FALLBACK)
     {
       unsigned res = (unsigned)ret;
       mlk_assert_bound(r, res, 0, MLKEM_Q);
@@ -134,19 +138,22 @@ __contract__(
   }
 #endif /* MLK_USE_NATIVE_REJ_UNIFORM */
 
-  return mlk_rej_uniform_scalar(r, target, offset, buf, buflen);
+  return mlk_rej_uniform_c(r, target, offset, buf, buflen);
 }
 
 #ifndef MLKEM_GEN_MATRIX_NBLOCKS
-#define MLKEM_GEN_MATRIX_NBLOCKS \
-  ((12 * MLKEM_N / 8 * (1 << 12) / MLKEM_Q + MLK_XOF_RATE) / MLK_XOF_RATE)
+#define MLKEM_GEN_MATRIX_NBLOCKS                                       \
+  ((12 * MLKEM_N / 8 * ((uint32_t)1 << 12) / MLKEM_Q + MLK_XOF_RATE) / \
+   MLK_XOF_RATE)
 #endif
 
+#if !defined(MLK_CONFIG_SERIAL_FIPS202_ONLY)
 /* Reference: Does not exist in the reference implementation @[REF].
  *            - x4-batched version of `rej_uniform()` from the
  *              reference implementation, leveraging x4-batched Keccak-f1600. */
 MLK_INTERNAL_API
-void mlk_poly_rej_uniform_x4(mlk_poly *vec,
+void mlk_poly_rej_uniform_x4(mlk_poly *vec0, mlk_poly *vec1, mlk_poly *vec2,
+                             mlk_poly *vec3,
                              uint8_t seed[4][MLK_ALIGN_UP(MLKEM_SYMBYTES + 2)])
 {
   /* Temporary buffers for XOF output before rejection sampling */
@@ -167,10 +174,10 @@ void mlk_poly_rej_uniform_x4(mlk_poly *vec,
    */
   mlk_xof_x4_squeezeblocks(buf, MLKEM_GEN_MATRIX_NBLOCKS, &statex);
   buflen = MLKEM_GEN_MATRIX_NBLOCKS * MLK_XOF_RATE;
-  ctr[0] = mlk_rej_uniform(vec[0].coeffs, MLKEM_N, 0, buf[0], buflen);
-  ctr[1] = mlk_rej_uniform(vec[1].coeffs, MLKEM_N, 0, buf[1], buflen);
-  ctr[2] = mlk_rej_uniform(vec[2].coeffs, MLKEM_N, 0, buf[2], buflen);
-  ctr[3] = mlk_rej_uniform(vec[3].coeffs, MLKEM_N, 0, buf[3], buflen);
+  ctr[0] = mlk_rej_uniform(vec0->coeffs, MLKEM_N, 0, buf[0], buflen);
+  ctr[1] = mlk_rej_uniform(vec1->coeffs, MLKEM_N, 0, buf[1], buflen);
+  ctr[2] = mlk_rej_uniform(vec2->coeffs, MLKEM_N, 0, buf[2], buflen);
+  ctr[3] = mlk_rej_uniform(vec3->coeffs, MLKEM_N, 0, buf[3], buflen);
 
   /*
    * So long as not all matrix entries have been generated, squeeze
@@ -180,20 +187,24 @@ void mlk_poly_rej_uniform_x4(mlk_poly *vec,
   while (ctr[0] < MLKEM_N || ctr[1] < MLKEM_N || ctr[2] < MLKEM_N ||
          ctr[3] < MLKEM_N)
   __loop__(
-    assigns(ctr, statex, memory_slice(vec, sizeof(mlk_poly) * 4), object_whole(buf[0]),
-       object_whole(buf[1]), object_whole(buf[2]), object_whole(buf[3]))
+    assigns(ctr, statex,
+            memory_slice(vec0, sizeof(mlk_poly)),
+            memory_slice(vec1, sizeof(mlk_poly)),
+            memory_slice(vec2, sizeof(mlk_poly)),
+            memory_slice(vec3, sizeof(mlk_poly)),
+            object_whole(buf))
     invariant(ctr[0] <= MLKEM_N && ctr[1] <= MLKEM_N)
     invariant(ctr[2] <= MLKEM_N && ctr[3] <= MLKEM_N)
-    invariant(array_bound(vec[0].coeffs, 0, ctr[0], 0, MLKEM_Q))
-    invariant(array_bound(vec[1].coeffs, 0, ctr[1], 0, MLKEM_Q))
-    invariant(array_bound(vec[2].coeffs, 0, ctr[2], 0, MLKEM_Q))
-    invariant(array_bound(vec[3].coeffs, 0, ctr[3], 0, MLKEM_Q)))
+    invariant(array_bound(vec0->coeffs, 0, ctr[0], 0, MLKEM_Q))
+    invariant(array_bound(vec1->coeffs, 0, ctr[1], 0, MLKEM_Q))
+    invariant(array_bound(vec2->coeffs, 0, ctr[2], 0, MLKEM_Q))
+    invariant(array_bound(vec3->coeffs, 0, ctr[3], 0, MLKEM_Q)))
   {
     mlk_xof_x4_squeezeblocks(buf, 1, &statex);
-    ctr[0] = mlk_rej_uniform(vec[0].coeffs, MLKEM_N, ctr[0], buf[0], buflen);
-    ctr[1] = mlk_rej_uniform(vec[1].coeffs, MLKEM_N, ctr[1], buf[1], buflen);
-    ctr[2] = mlk_rej_uniform(vec[2].coeffs, MLKEM_N, ctr[2], buf[2], buflen);
-    ctr[3] = mlk_rej_uniform(vec[3].coeffs, MLKEM_N, ctr[3], buf[3], buflen);
+    ctr[0] = mlk_rej_uniform(vec0->coeffs, MLKEM_N, ctr[0], buf[0], buflen);
+    ctr[1] = mlk_rej_uniform(vec1->coeffs, MLKEM_N, ctr[1], buf[1], buflen);
+    ctr[2] = mlk_rej_uniform(vec2->coeffs, MLKEM_N, ctr[2], buf[2], buflen);
+    ctr[3] = mlk_rej_uniform(vec3->coeffs, MLKEM_N, ctr[3], buf[3], buflen);
   }
 
   mlk_xof_x4_release(&statex);
@@ -202,6 +213,7 @@ void mlk_poly_rej_uniform_x4(mlk_poly *vec,
    * @[FIPS203, Section 3.3, Destruction of intermediate values] */
   mlk_zeroize(buf, sizeof(buf));
 }
+#endif /* !MLK_CONFIG_SERIAL_FIPS202_ONLY */
 
 MLK_INTERNAL_API
 void mlk_poly_rej_uniform(mlk_poly *entry, uint8_t seed[MLKEM_SYMBYTES + 2])
@@ -239,19 +251,15 @@ void mlk_poly_rej_uniform(mlk_poly *entry, uint8_t seed[MLKEM_SYMBYTES + 2])
   mlk_zeroize(buf, sizeof(buf));
 }
 
-/*************************************************
- * Name:        mlk_load32_littleendian
+/**
+ * Load 4 bytes into a 32-bit integer in little-endian order.
  *
- * Description: load 4 bytes into a 32-bit integer
- *              in little-endian order
+ * @reference{`load32_littleendian()` in the reference implementation @[REF].}
  *
- * Arguments:   - const uint8_t *x: pointer to input byte array
+ * @param[in] x Input byte array.
  *
- * Returns 32-bit unsigned integer loaded from x
- *
- **************************************************/
-
-/* Reference: `load32_littleendian()` in the reference implementation @[REF]. */
+ * @return 32-bit unsigned integer loaded from @p x.
+ */
 static uint32_t mlk_load32_littleendian(const uint8_t x[4])
 {
   uint32_t r;
@@ -270,7 +278,8 @@ void mlk_poly_cbd2(mlk_poly *r, const uint8_t buf[2 * MLKEM_N / 4])
   for (i = 0; i < MLKEM_N / 8; i++)
   __loop__(
     invariant(i <= MLKEM_N / 8)
-    invariant(array_abs_bound(r->coeffs, 0, 8 * i, 3)))
+    invariant(array_abs_bound(r->coeffs, 0, 8 * i, 3))
+    decreases(MLKEM_N / 8 - i))
   {
     unsigned j;
     uint32_t t = mlk_load32_littleendian(buf + 4 * i);
@@ -280,30 +289,31 @@ void mlk_poly_cbd2(mlk_poly *r, const uint8_t buf[2 * MLKEM_N / 4])
     for (j = 0; j < 8; j++)
     __loop__(
       invariant(i <= MLKEM_N / 8 && j <= 8)
-      invariant(array_abs_bound(r->coeffs, 0, 8 * i + j, 3)))
+      invariant(array_abs_bound(r->coeffs, 0, 8 * i + j, 3))
+      decreases(8 - j))
     {
-      const int16_t a = (d >> (4 * j + 0)) & 0x3;
-      const int16_t b = (d >> (4 * j + 2)) & 0x3;
-      r->coeffs[8 * i + j] = a - b;
+      /* Safety: The & 0x3 masks each value to 2 bits (range [0, 3]), so the
+       * truncation and subsequent subtraction in int16_t is lossless. */
+      const int16_t a = (int16_t)((d >> (4 * j + 0)) & 0x3);
+      const int16_t b = (int16_t)((d >> (4 * j + 2)) & 0x3);
+      r->coeffs[8 * i + j] = (int16_t)(a - b);
     }
   }
 }
 
 #if defined(MLK_CONFIG_MULTILEVEL_WITH_SHARED) || MLKEM_ETA1 == 3
-/*************************************************
- * Name:        mlk_load24_littleendian
+/**
+ * Load 3 bytes into a 32-bit integer in little-endian order.
  *
- * Description: load 3 bytes into a 32-bit integer
- *              in little-endian order.
- *              This function is only needed for ML-KEM-512
+ * This function is only needed for ML-KEM-512.
  *
- * Arguments:   - const uint8_t *x: pointer to input byte array
+ * @reference{`load24_littleendian()` in the reference implementation @[REF].}
  *
- * Returns 32-bit unsigned integer loaded from x (most significant byte is zero)
+ * @param[in] x Input byte array.
  *
- **************************************************/
-
-/* Reference: `load24_littleendian()` in the reference implementation @[REF]. */
+ * @return 32-bit unsigned integer loaded from @p x (most significant byte
+ *         is zero).
+ */
 static uint32_t mlk_load24_littleendian(const uint8_t x[3])
 {
   uint32_t r;
@@ -321,7 +331,8 @@ void mlk_poly_cbd3(mlk_poly *r, const uint8_t buf[3 * MLKEM_N / 4])
   for (i = 0; i < MLKEM_N / 4; i++)
   __loop__(
     invariant(i <= MLKEM_N / 4)
-    invariant(array_abs_bound(r->coeffs, 0, 4 * i, 4)))
+    invariant(array_abs_bound(r->coeffs, 0, 4 * i, 4))
+    decreases(MLKEM_N / 4 - i))
   {
     unsigned j;
     const uint32_t t = mlk_load24_littleendian(buf + 3 * i);
@@ -332,11 +343,14 @@ void mlk_poly_cbd3(mlk_poly *r, const uint8_t buf[3 * MLKEM_N / 4])
     for (j = 0; j < 4; j++)
     __loop__(
       invariant(i <= MLKEM_N / 4 && j <= 4)
-      invariant(array_abs_bound(r->coeffs, 0, 4 * i + j, 4)))
+      invariant(array_abs_bound(r->coeffs, 0, 4 * i + j, 4))
+      decreases(4 - j))
     {
-      const int16_t a = (d >> (6 * j + 0)) & 0x7;
-      const int16_t b = (d >> (6 * j + 3)) & 0x7;
-      r->coeffs[4 * i + j] = a - b;
+      /* Safety: The & 0x7 masks each value to 3 bits (range [0, 7]), so the
+       * truncation and subsequent subtraction in int16_t is lossless. */
+      const int16_t a = (int16_t)((d >> (6 * j + 0)) & 0x7);
+      const int16_t b = (int16_t)((d >> (6 * j + 3)) & 0x7);
+      r->coeffs[4 * i + j] = (int16_t)(a - b);
     }
   }
 }

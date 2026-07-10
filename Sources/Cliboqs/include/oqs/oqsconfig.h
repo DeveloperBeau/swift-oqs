@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: MIT
-// Generated for liboqs-swift vendored build of liboqs 0.15.0
+// Generated for liboqs-swift vendored build of liboqs 0.16.0
 // Portable-only build: no platform-specific optimized variants.
 
 #ifndef OQS_OQSCONFIG_H
 #define OQS_OQSCONFIG_H
 
-#define OQS_VERSION_TEXT "0.15.0"
+#define OQS_VERSION_TEXT "0.16.0"
 #define OQS_VERSION_MAJOR 0
-#define OQS_VERSION_MINOR 15
+#define OQS_VERSION_MINOR 16
 #define OQS_VERSION_PATCH 0
 
 #define OQS_COMPILE_BUILD_TARGET "generic"
@@ -37,6 +37,15 @@
 #define OQS_ENABLE_KEM_frodokem_1344_aes 1
 #define OQS_ENABLE_KEM_frodokem_1344_shake 1
 
+// eFrodoKEM (0.16.0+): the pre-0.16.0 ephemeral FrodoKEM under new names;
+// the frodokem_* macros above now select the salted variant.
+#define OQS_ENABLE_KEM_efrodokem_640_aes 1
+#define OQS_ENABLE_KEM_efrodokem_640_shake 1
+#define OQS_ENABLE_KEM_efrodokem_976_aes 1
+#define OQS_ENABLE_KEM_efrodokem_976_shake 1
+#define OQS_ENABLE_KEM_efrodokem_1344_aes 1
+#define OQS_ENABLE_KEM_efrodokem_1344_shake 1
+
 #define OQS_ENABLE_KEM_NTRUPRIME 1
 #define OQS_ENABLE_KEM_ntruprime_sntrup761 1
 
@@ -60,10 +69,12 @@
 #define OQS_ENABLE_KEM_classic_mceliece_8192128 1
 #define OQS_ENABLE_KEM_classic_mceliece_8192128f 1
 
+// HQC enabled via generated per-variant unity TUs (pqc-hqc impl, 20250822
+// spec, 0.16.0+); PQCHQC_NAMESPACE_PREFIX is baked into each unity_hqc_N.c.
 #define OQS_ENABLE_KEM_HQC 1
-#define OQS_ENABLE_KEM_hqc_128 1
-#define OQS_ENABLE_KEM_hqc_192 1
-#define OQS_ENABLE_KEM_hqc_256 1
+#define OQS_ENABLE_KEM_hqc_1 1
+#define OQS_ENABLE_KEM_hqc_3 1
+#define OQS_ENABLE_KEM_hqc_5 1
 
 // Kyber (deprecated, replaced by ML-KEM) enabled via generated unity TUs
 // (see Package.swift / vendor-liboqs.sh). Each variant's KYBER_K is baked
@@ -80,9 +91,9 @@
 
 // --- SIG algorithms (portable/reference only) ---
 
-// ML-DSA enabled via generated unity translation units (see Package.swift /
-// vendor-liboqs.sh). Each variant's _ref dir is compiled through one unity TU
-// alongside its sig_ml_dsa_*.c glue.
+// ML-DSA (mldsa-native, 0.16.0+): each _ref variant dir compiles as plain TUs;
+// the parameter set comes from the hand-added mldsa_native_config.h in each
+// variant dir (see scripts/vendor-liboqs.sh PRESERVE), mirroring ml_kem.
 #define OQS_ENABLE_SIG_ML_DSA 1
 #define OQS_ENABLE_SIG_ml_dsa_44 1
 #define OQS_ENABLE_SIG_ml_dsa_65 1
@@ -94,19 +105,22 @@
 #define OQS_ENABLE_SIG_falcon_padded_512 1
 #define OQS_ENABLE_SIG_falcon_padded_1024 1
 
-#define OQS_ENABLE_SIG_SPHINCS 1
-#define OQS_ENABLE_SIG_sphincs_sha2_128f_simple 1
-#define OQS_ENABLE_SIG_sphincs_sha2_128s_simple 1
-#define OQS_ENABLE_SIG_sphincs_sha2_192f_simple 1
-#define OQS_ENABLE_SIG_sphincs_sha2_192s_simple 1
-#define OQS_ENABLE_SIG_sphincs_sha2_256f_simple 1
-#define OQS_ENABLE_SIG_sphincs_sha2_256s_simple 1
-#define OQS_ENABLE_SIG_sphincs_shake_128f_simple 1
-#define OQS_ENABLE_SIG_sphincs_shake_128s_simple 1
-#define OQS_ENABLE_SIG_sphincs_shake_192f_simple 1
-#define OQS_ENABLE_SIG_sphincs_shake_192s_simple 1
-#define OQS_ENABLE_SIG_sphincs_shake_256f_simple 1
-#define OQS_ENABLE_SIG_sphincs_shake_256s_simple 1
+// MQOM (0.16.0+) enabled via generated per-variant unity TUs over the shared
+// mqom_mqom_common sources (see scripts/vendor-liboqs.sh). Portable/default
+// variants only — no _memopt/_avx2 sub-macros.
+#define OQS_ENABLE_SIG_MQOM 1
+#define OQS_ENABLE_SIG_mqom_mqom2_cat1_gf16_fast_r3 1
+#define OQS_ENABLE_SIG_mqom_mqom2_cat1_gf16_fast_r5 1
+#define OQS_ENABLE_SIG_mqom_mqom2_cat1_gf16_short_r3 1
+#define OQS_ENABLE_SIG_mqom_mqom2_cat1_gf16_short_r5 1
+#define OQS_ENABLE_SIG_mqom_mqom2_cat3_gf16_fast_r3 1
+#define OQS_ENABLE_SIG_mqom_mqom2_cat3_gf16_fast_r5 1
+#define OQS_ENABLE_SIG_mqom_mqom2_cat3_gf16_short_r3 1
+#define OQS_ENABLE_SIG_mqom_mqom2_cat3_gf16_short_r5 1
+#define OQS_ENABLE_SIG_mqom_mqom2_cat5_gf16_fast_r3 1
+#define OQS_ENABLE_SIG_mqom_mqom2_cat5_gf16_fast_r5 1
+#define OQS_ENABLE_SIG_mqom_mqom2_cat5_gf16_short_r3 1
+#define OQS_ENABLE_SIG_mqom_mqom2_cat5_gf16_short_r5 1
 
 // MAYO enabled via generated per-variant unity translation units (see
 // scripts/vendor-liboqs.sh); each variant's compile-time parameters are baked

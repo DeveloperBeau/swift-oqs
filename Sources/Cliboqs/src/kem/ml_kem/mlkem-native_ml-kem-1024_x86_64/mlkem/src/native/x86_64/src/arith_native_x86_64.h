@@ -7,81 +7,321 @@
 
 #include "../../../common.h"
 
-#include <immintrin.h>
 #include <stdint.h>
+#include "compress_consts.h"
 #include "consts.h"
 
 #define MLK_AVX2_REJ_UNIFORM_BUFLEN \
   (3 * 168) /* REJ_UNIFORM_NBLOCKS * SHAKE128_RATE */
 
-#define mlk_rej_uniform_avx2 MLK_NAMESPACE(rej_uniform_avx2)
-unsigned mlk_rej_uniform_avx2(int16_t *r, const uint8_t *buf);
-
 #define mlk_rej_uniform_table MLK_NAMESPACE(rej_uniform_table)
-extern const uint8_t mlk_rej_uniform_table[256][8];
+MLK_INTERNAL_DATA_DECLARATION const uint8_t mlk_rej_uniform_table[4096];
 
-#define mlk_ntt_avx2 MLK_NAMESPACE(ntt_avx2)
-void mlk_ntt_avx2(__m256i *r, const __m256i *mlk_qdata);
+#define mlk_rej_uniform_avx2_asm MLK_NAMESPACE(rej_uniform_avx2_asm)
+MLK_MUST_CHECK_RETURN_VALUE MLK_SYSV_ABI
+uint64_t mlk_rej_uniform_avx2_asm(int16_t *r, const uint8_t *buf,
+                                  unsigned buflen, const uint8_t *table)
+/* This must be kept in sync with the HOL-Light specification
+ * in proofs/hol_light/x86_64/proofs/rej_uniform_avx2_asm.ml. */
+__contract__(
+    requires(buflen % 12 == 0)
+    requires(memory_no_alias(buf, buflen))
+    requires(table == mlk_rej_uniform_table)
+    requires(memory_no_alias(r, sizeof(int16_t) * MLKEM_N))
+    assigns(memory_slice(r, sizeof(int16_t) * MLKEM_N))
+    ensures(return_value <= MLKEM_N)
+    ensures(array_bound(r, 0, (unsigned) return_value, 0, MLKEM_Q))
+);
 
-#define mlk_invntt_avx2 MLK_NAMESPACE(invntt_avx2)
-void mlk_invntt_avx2(__m256i *r, const __m256i *mlk_qdata);
+#define mlk_ntt_avx2_asm MLK_NAMESPACE(ntt_avx2_asm)
+MLK_SYSV_ABI
+void mlk_ntt_avx2_asm(int16_t *r, const int16_t *qdata)
+/* This must be kept in sync with the HOL-Light specification
+ * in proofs/hol_light/x86_64/proofs/ntt_avx2_asm.ml */
+__contract__(
+  requires(memory_no_alias(r, sizeof(int16_t) * MLKEM_N))
+  requires(array_abs_bound(r, 0, MLKEM_N, 8192))
+  requires(qdata == mlk_qdata)
+  assigns(memory_slice(r, sizeof(int16_t) * MLKEM_N))
+  /* check-magic: off */
+  ensures(array_abs_bound(r, 0, MLKEM_N, 23595))
+  /* check-magic: on */
+);
 
-#define mlk_nttunpack_avx2 MLK_NAMESPACE(nttunpack_avx2)
-void mlk_nttunpack_avx2(__m256i *r);
+#define mlk_invntt_avx2_asm MLK_NAMESPACE(invntt_avx2_asm)
+MLK_SYSV_ABI
+void mlk_invntt_avx2_asm(int16_t *r, const int16_t *qdata)
+/* This must be kept in sync with the HOL-Light specification
+ * in proofs/hol_light/x86_64/proofs/intt_avx2_asm.ml */
+__contract__(
+  requires(memory_no_alias(r, sizeof(int16_t) * MLKEM_N))
+  requires(qdata == mlk_qdata)
+  assigns(memory_slice(r, sizeof(int16_t) * MLKEM_N))
+  /* check-magic: off */
+  ensures(array_abs_bound(r, 0, MLKEM_N, 26632))
+  /* check-magic: on */
+);
 
-#define mlk_reduce_avx2 MLK_NAMESPACE(reduce_avx2)
-void mlk_reduce_avx2(__m256i *r, const __m256i *mlk_qdata);
+#define mlk_nttunpack_avx2_asm MLK_NAMESPACE(nttunpack_avx2_asm)
+MLK_SYSV_ABI
+void mlk_nttunpack_avx2_asm(int16_t *r)
+/* This must be kept in sync with the HOL-Light specification
+ * in proofs/hol_light/x86_64/proofs/nttunpack_avx2_asm.ml */
+__contract__(
+  requires(memory_no_alias(r, sizeof(int16_t) * MLKEM_N))
+  requires(array_bound(r, 0, MLKEM_N, 0, MLKEM_Q))
+  assigns(memory_slice(r, sizeof(int16_t) * MLKEM_N))
+  /* Output is a permutation of input: every output coefficient
+   * is some input coefficient */
+  ensures(forall(i, 0, MLKEM_N, exists(j, 0, MLKEM_N,
+    r[i] == old(*(int16_t (*)[MLKEM_N])r)[j])))
+);
 
-#define mlk_basemul_avx2 MLK_NAMESPACE(basemul_avx2)
-void mlk_basemul_avx2(__m256i *r, const __m256i *a, const __m256i *b,
-                      const __m256i *b_cache, const __m256i *mlk_qdata);
+#define mlk_reduce_avx2_asm MLK_NAMESPACE(reduce_avx2_asm)
+MLK_SYSV_ABI
+void mlk_reduce_avx2_asm(int16_t *r)
+/* This must be kept in sync with the HOL-Light specification
+ * in proofs/hol_light/x86_64/proofs/reduce_avx2_asm.ml */
+__contract__(
+  requires(memory_no_alias(r, sizeof(int16_t) * MLKEM_N))
+  assigns(memory_slice(r, sizeof(int16_t) * MLKEM_N))
+  ensures(array_bound(r, 0, MLKEM_N, 0, MLKEM_Q))
+);
 
-#define mlk_poly_mulcache_compute_avx2 MLK_NAMESPACE(poly_mulcache_compute_avx2)
-void mlk_poly_mulcache_compute_avx2(__m256i *out, const __m256i *in,
-                                    const __m256i *mlk_qdata);
+#define mlk_poly_mulcache_compute_avx2_asm \
+  MLK_NAMESPACE(poly_mulcache_compute_avx2_asm)
+MLK_SYSV_ABI
+void mlk_poly_mulcache_compute_avx2_asm(int16_t *out, const int16_t *in,
+                                        const int16_t *qdata)
+/* This must be kept in sync with the HOL-Light specification
+ * in proofs/hol_light/x86_64/proofs/poly_mulcache_compute_avx2_asm.ml */
+__contract__(
+  requires(memory_no_alias(out, sizeof(int16_t) * (MLKEM_N / 2)))
+  requires(memory_no_alias(in, sizeof(int16_t) * MLKEM_N))
+  requires(qdata == mlk_qdata)
+  assigns(memory_slice(out, sizeof(int16_t) * (MLKEM_N / 2)))
+  ensures(array_abs_bound(out, 0, MLKEM_N/2, MLKEM_Q))
+);
 
-#define mlk_polyvec_basemul_acc_montgomery_cached_avx2 \
-  MLK_NAMESPACE(polyvec_basemul_acc_montgomery_cached_avx2)
-void mlk_polyvec_basemul_acc_montgomery_cached_avx2(unsigned k,
-                                                    int16_t r[MLKEM_N],
-                                                    const int16_t *a,
-                                                    const int16_t *b,
-                                                    const int16_t *kb_cache);
+#define mlk_polyvec_basemul_acc_montgomery_cached_k2_avx2_asm \
+  MLK_NAMESPACE(polyvec_basemul_acc_montgomery_cached_k2_avx2_asm)
+MLK_SYSV_ABI
+void mlk_polyvec_basemul_acc_montgomery_cached_k2_avx2_asm(
+    int16_t *r, const int16_t *a, const int16_t *b, const int16_t *b_cache)
+/* This must be kept in sync with the HOL-Light specification in
+ * proofs/hol_light/x86_64/proofs/polyvec_basemul_acc_montgomery_cached_k2_avx2_asm.ml.
+ */
+__contract__(
+    requires(memory_no_alias(r, sizeof(int16_t) * MLKEM_N))
+    requires(memory_no_alias(a, sizeof(int16_t) * 2 * MLKEM_N))
+    requires(memory_no_alias(b, sizeof(int16_t) * 2 * MLKEM_N))
+    requires(memory_no_alias(b_cache, sizeof(int16_t) * 2 * (MLKEM_N / 2)))
+    requires(array_abs_bound(a, 0, 2 * MLKEM_N, MLKEM_UINT12_LIMIT + 1))
+    assigns(memory_slice(r, sizeof(int16_t) * MLKEM_N))
+);
 
-#define mlk_ntttobytes_avx2 MLK_NAMESPACE(ntttobytes_avx2)
-void mlk_ntttobytes_avx2(uint8_t *r, const __m256i *a,
-                         const __m256i *mlk_qdata);
+#define mlk_polyvec_basemul_acc_montgomery_cached_k3_avx2_asm \
+  MLK_NAMESPACE(polyvec_basemul_acc_montgomery_cached_k3_avx2_asm)
+MLK_SYSV_ABI
+void mlk_polyvec_basemul_acc_montgomery_cached_k3_avx2_asm(
+    int16_t *r, const int16_t *a, const int16_t *b, const int16_t *b_cache)
+/* This must be kept in sync with the HOL-Light specification in
+ * proofs/hol_light/x86_64/proofs/polyvec_basemul_acc_montgomery_cached_k3_avx2_asm.ml.
+ */
+__contract__(
+    requires(memory_no_alias(r, sizeof(int16_t) * MLKEM_N))
+    requires(memory_no_alias(a, sizeof(int16_t) * 3 * MLKEM_N))
+    requires(memory_no_alias(b, sizeof(int16_t) * 3 * MLKEM_N))
+    requires(memory_no_alias(b_cache, sizeof(int16_t) * 3 * (MLKEM_N / 2)))
+    requires(array_abs_bound(a, 0, 3 * MLKEM_N, MLKEM_UINT12_LIMIT + 1))
+    assigns(memory_slice(r, sizeof(int16_t) * MLKEM_N))
+);
 
-#define mlk_nttfrombytes_avx2 MLK_NAMESPACE(nttfrombytes_avx2)
-void mlk_nttfrombytes_avx2(__m256i *r, const uint8_t *a,
-                           const __m256i *mlk_qdata);
+#define mlk_polyvec_basemul_acc_montgomery_cached_k4_avx2_asm \
+  MLK_NAMESPACE(polyvec_basemul_acc_montgomery_cached_k4_avx2_asm)
+MLK_SYSV_ABI
+void mlk_polyvec_basemul_acc_montgomery_cached_k4_avx2_asm(
+    int16_t *r, const int16_t *a, const int16_t *b, const int16_t *b_cache)
+/* This must be kept in sync with the HOL-Light specification in
+ * proofs/hol_light/x86_64/proofs/polyvec_basemul_acc_montgomery_cached_k4_avx2_asm.ml.
+ */
+__contract__(
+    requires(memory_no_alias(r, sizeof(int16_t) * MLKEM_N))
+    requires(memory_no_alias(a, sizeof(int16_t) * 4 * MLKEM_N))
+    requires(memory_no_alias(b, sizeof(int16_t) * 4 * MLKEM_N))
+    requires(memory_no_alias(b_cache, sizeof(int16_t) * 4 * (MLKEM_N / 2)))
+    requires(array_abs_bound(a, 0, 4 * MLKEM_N, MLKEM_UINT12_LIMIT + 1))
+    assigns(memory_slice(r, sizeof(int16_t) * MLKEM_N))
+);
 
-#define mlk_tomont_avx2 MLK_NAMESPACE(tomont_avx2)
-void mlk_tomont_avx2(__m256i *r, const __m256i *mlk_qdata);
+#define mlk_ntttobytes_avx2_asm MLK_NAMESPACE(ntttobytes_avx2_asm)
+MLK_SYSV_ABI
+void mlk_ntttobytes_avx2_asm(uint8_t *r, const int16_t *a)
+/* This must be kept in sync with the HOL-Light specification in
+ * proofs/hol_light/x86_64/proofs/ntttobytes_avx2_asm.ml.
+ */
+__contract__(
+  requires(memory_no_alias(r, MLKEM_POLYBYTES))
+  requires(memory_no_alias(a, sizeof(int16_t) * MLKEM_N))
+  requires(array_bound(a, 0, MLKEM_N, 0, MLKEM_Q))
+  assigns(memory_slice(r, MLKEM_POLYBYTES))
+);
 
-#define mlk_poly_compress_d4_avx2 MLK_NAMESPACE(poly_compress_d4_avx2)
-void mlk_poly_compress_d4_avx2(uint8_t r[MLKEM_POLYCOMPRESSEDBYTES_D4],
-                               const __m256i *MLK_RESTRICT a);
-#define mlk_poly_decompress_d4_avx2 MLK_NAMESPACE(poly_decompress_d4_avx2)
-void mlk_poly_decompress_d4_avx2(__m256i *MLK_RESTRICT r,
-                                 const uint8_t a[MLKEM_POLYCOMPRESSEDBYTES_D4]);
-#define mlk_poly_compress_d10_avx2 MLK_NAMESPACE(poly_compress10_avx2)
-void mlk_poly_compress_d10_avx2(uint8_t r[MLKEM_POLYCOMPRESSEDBYTES_D10],
-                                const __m256i *MLK_RESTRICT a);
-#define mlk_poly_decompress_d10_avx2 MLK_NAMESPACE(poly_decompress10_avx2)
-void mlk_poly_decompress_d10_avx2(
-    __m256i *MLK_RESTRICT r, const uint8_t a[MLKEM_POLYCOMPRESSEDBYTES_D10]);
-#define mlk_poly_compress_d5_avx2 MLK_NAMESPACE(poly_compress_d5_avx2)
-void mlk_poly_compress_d5_avx2(uint8_t r[MLKEM_POLYCOMPRESSEDBYTES_D5],
-                               const __m256i *MLK_RESTRICT a);
-#define mlk_poly_decompress_d5_avx2 MLK_NAMESPACE(poly_decompress_d5_avx2)
-void mlk_poly_decompress_d5_avx2(__m256i *MLK_RESTRICT r,
-                                 const uint8_t a[MLKEM_POLYCOMPRESSEDBYTES_D5]);
-#define mlk_poly_compress_d11_avx2 MLK_NAMESPACE(poly_compress11_avx2)
-void mlk_poly_compress_d11_avx2(uint8_t r[MLKEM_POLYCOMPRESSEDBYTES_D11],
-                                const __m256i *MLK_RESTRICT a);
-#define mlk_poly_decompress_d11_avx2 MLK_NAMESPACE(poly_decompress11_avx2)
-void mlk_poly_decompress_d11_avx2(
-    __m256i *MLK_RESTRICT r, const uint8_t a[MLKEM_POLYCOMPRESSEDBYTES_D11]);
+#define mlk_nttfrombytes_avx2_asm MLK_NAMESPACE(nttfrombytes_avx2_asm)
+MLK_SYSV_ABI
+void mlk_nttfrombytes_avx2_asm(int16_t *r, const uint8_t *a)
+/* This must be kept in sync with the HOL-Light specification in
+ * proofs/hol_light/x86_64/proofs/nttfrombytes_avx2_asm.ml.
+ */
+__contract__(
+  requires(memory_no_alias(a, MLKEM_POLYBYTES))
+  requires(memory_no_alias(r, sizeof(int16_t) * MLKEM_N))
+  assigns(memory_slice(r, sizeof(int16_t) * MLKEM_N))
+  ensures(array_bound(r, 0, MLKEM_N, 0, MLKEM_UINT12_LIMIT))
+);
+
+#define mlk_tomont_avx2_asm MLK_NAMESPACE(tomont_avx2_asm)
+MLK_SYSV_ABI
+void mlk_tomont_avx2_asm(int16_t *r)
+/* This must be kept in sync with the HOL-Light specification in
+ * proofs/hol_light/x86_64/proofs/tomont_avx2_asm.ml.
+ */
+__contract__(
+  requires(memory_no_alias(r, sizeof(int16_t) * MLKEM_N))
+  assigns(memory_slice(r, sizeof(int16_t) * MLKEM_N))
+  ensures(array_abs_bound(r, 0, MLKEM_N, MLKEM_Q))
+);
+
+#define mlk_poly_compress_d4_avx2_asm MLK_NAMESPACE(poly_compress_d4_avx2_asm)
+MLK_SYSV_ABI
+void mlk_poly_compress_d4_avx2_asm(uint8_t r[MLKEM_POLYCOMPRESSEDBYTES_D4],
+                                   const int16_t *MLK_RESTRICT a,
+                                   const uint8_t *data)
+/* This must be kept in sync with the HOL-Light specification in
+ * proofs/hol_light/x86_64/proofs/poly_compress_d4_avx2_asm.ml.
+ */
+__contract__(
+  requires(memory_no_alias(r, MLKEM_POLYCOMPRESSEDBYTES_D4))
+  requires(memory_no_alias(a, sizeof(int16_t) * MLKEM_N))
+  requires(array_bound(a, 0, MLKEM_N, 0, MLKEM_Q))
+  requires(data == mlk_compress_d4_data)
+  assigns(memory_slice(r, MLKEM_POLYCOMPRESSEDBYTES_D4))
+);
+
+#define mlk_poly_decompress_d4_avx2_asm \
+  MLK_NAMESPACE(poly_decompress_d4_avx2_asm)
+MLK_SYSV_ABI
+void mlk_poly_decompress_d4_avx2_asm(
+    int16_t *MLK_RESTRICT r, const uint8_t a[MLKEM_POLYCOMPRESSEDBYTES_D4],
+    const uint8_t *data)
+/* This must be kept in sync with the HOL-Light specification in
+ * proofs/hol_light/x86_64/proofs/poly_decompress_d4_avx2_asm.ml.
+ */
+__contract__(
+  requires(memory_no_alias(r, sizeof(int16_t) * MLKEM_N))
+  requires(memory_no_alias(a, MLKEM_POLYCOMPRESSEDBYTES_D4))
+  requires(data == mlk_decompress_d4_data)
+  assigns(memory_slice(r, sizeof(int16_t) * MLKEM_N))
+  ensures(array_bound(r, 0, MLKEM_N, 0, MLKEM_Q))
+);
+
+#define mlk_poly_compress_d10_avx2_asm MLK_NAMESPACE(poly_compress_d10_avx2_asm)
+MLK_SYSV_ABI
+void mlk_poly_compress_d10_avx2_asm(uint8_t r[MLKEM_POLYCOMPRESSEDBYTES_D10],
+                                    const int16_t *MLK_RESTRICT a,
+                                    const uint8_t *data)
+/* This must be kept in sync with the HOL-Light specification in
+ * proofs/hol_light/x86_64/proofs/poly_compress_d10_avx2_asm.ml.
+ */
+__contract__(
+  requires(memory_no_alias(r, MLKEM_POLYCOMPRESSEDBYTES_D10))
+  requires(memory_no_alias(a, sizeof(int16_t) * MLKEM_N))
+  requires(array_bound(a, 0, MLKEM_N, 0, MLKEM_Q))
+  requires(data == mlk_compress_d10_data)
+  assigns(memory_slice(r, MLKEM_POLYCOMPRESSEDBYTES_D10))
+);
+
+#define mlk_poly_decompress_d10_avx2_asm \
+  MLK_NAMESPACE(poly_decompress_d10_avx2_asm)
+MLK_SYSV_ABI
+void mlk_poly_decompress_d10_avx2_asm(
+    int16_t *MLK_RESTRICT r, const uint8_t a[MLKEM_POLYCOMPRESSEDBYTES_D10],
+    const uint8_t *data)
+/* This must be kept in sync with the HOL-Light specification in
+ * proofs/hol_light/x86_64/proofs/poly_decompress_d10_avx2_asm.ml.
+ */
+__contract__(
+  requires(memory_no_alias(r, sizeof(int16_t) * MLKEM_N))
+  requires(memory_no_alias(a, MLKEM_POLYCOMPRESSEDBYTES_D10))
+  requires(data == mlk_decompress_d10_data)
+  assigns(memory_slice(r, sizeof(int16_t) * MLKEM_N))
+  ensures(array_bound(r, 0, MLKEM_N, 0, MLKEM_Q))
+);
+
+#define mlk_poly_compress_d5_avx2_asm MLK_NAMESPACE(poly_compress_d5_avx2_asm)
+MLK_SYSV_ABI
+void mlk_poly_compress_d5_avx2_asm(uint8_t r[MLKEM_POLYCOMPRESSEDBYTES_D5],
+                                   const int16_t *MLK_RESTRICT a,
+                                   const uint8_t *data)
+/* This must be kept in sync with the HOL-Light specification in
+ * proofs/hol_light/x86_64/proofs/poly_compress_d5_avx2_asm.ml.
+ */
+__contract__(
+  requires(memory_no_alias(r, MLKEM_POLYCOMPRESSEDBYTES_D5))
+  requires(memory_no_alias(a, sizeof(int16_t) * MLKEM_N))
+  requires(array_bound(a, 0, MLKEM_N, 0, MLKEM_Q))
+  requires(data == mlk_compress_d5_data)
+  assigns(memory_slice(r, MLKEM_POLYCOMPRESSEDBYTES_D5))
+);
+
+#define mlk_poly_decompress_d5_avx2_asm \
+  MLK_NAMESPACE(poly_decompress_d5_avx2_asm)
+MLK_SYSV_ABI
+void mlk_poly_decompress_d5_avx2_asm(
+    int16_t *MLK_RESTRICT r, const uint8_t a[MLKEM_POLYCOMPRESSEDBYTES_D5],
+    const uint8_t *data)
+/* This must be kept in sync with the HOL-Light specification in
+ * proofs/hol_light/x86_64/proofs/poly_decompress_d5_avx2_asm.ml.
+ */
+__contract__(
+  requires(memory_no_alias(r, sizeof(int16_t) * MLKEM_N))
+  requires(memory_no_alias(a, MLKEM_POLYCOMPRESSEDBYTES_D5))
+  requires(data == mlk_decompress_d5_data)
+  assigns(memory_slice(r, sizeof(int16_t) * MLKEM_N))
+  ensures(array_bound(r, 0, MLKEM_N, 0, MLKEM_Q))
+);
+
+#define mlk_poly_compress_d11_avx2_asm MLK_NAMESPACE(poly_compress_d11_avx2_asm)
+MLK_SYSV_ABI
+void mlk_poly_compress_d11_avx2_asm(uint8_t r[MLKEM_POLYCOMPRESSEDBYTES_D11],
+                                    const int16_t *MLK_RESTRICT a,
+                                    const uint8_t *data)
+/* This must be kept in sync with the HOL-Light specification in
+ * proofs/hol_light/x86_64/proofs/poly_compress_d11_avx2_asm.ml.
+ */
+__contract__(
+  requires(memory_no_alias(r, MLKEM_POLYCOMPRESSEDBYTES_D11))
+  requires(memory_no_alias(a, sizeof(int16_t) * MLKEM_N))
+  requires(array_bound(a, 0, MLKEM_N, 0, MLKEM_Q))
+  requires(data == mlk_compress_d11_data)
+  assigns(memory_slice(r, MLKEM_POLYCOMPRESSEDBYTES_D11))
+);
+
+#define mlk_poly_decompress_d11_avx2_asm \
+  MLK_NAMESPACE(poly_decompress_d11_avx2_asm)
+MLK_SYSV_ABI
+void mlk_poly_decompress_d11_avx2_asm(
+    int16_t *MLK_RESTRICT r, const uint8_t a[MLKEM_POLYCOMPRESSEDBYTES_D11],
+    const uint8_t *data)
+/* This must be kept in sync with the HOL-Light specification in
+ * proofs/hol_light/x86_64/proofs/poly_decompress_d11_avx2_asm.ml.
+ */
+__contract__(
+  requires(memory_no_alias(r, sizeof(int16_t) * MLKEM_N))
+  requires(memory_no_alias(a, MLKEM_POLYCOMPRESSEDBYTES_D11))
+  requires(data == mlk_decompress_d11_data)
+  assigns(memory_slice(r, sizeof(int16_t) * MLKEM_N))
+  ensures(array_bound(r, 0, MLKEM_N, 0, MLKEM_Q))
+);
 
 #endif /* !MLK_NATIVE_X86_64_SRC_ARITH_NATIVE_X86_64_H */

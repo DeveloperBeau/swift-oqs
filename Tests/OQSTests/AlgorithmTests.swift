@@ -15,14 +15,14 @@ import Foundation
     @Test("ML-KEM-1024 keygen")
     func mlkem1024() throws { _ = try MLKEM1024.PrivateKey() }
 
-    @Test("HQC-128 keygen")
-    func hqc128() throws { _ = try HQC128.PrivateKey() }
+    @Test("HQC-1 keygen")
+    func hqc1() throws { _ = try HQC1.PrivateKey() }
 
-    @Test("HQC-192 keygen")
-    func hqc192() throws { _ = try HQC192.PrivateKey() }
+    @Test("HQC-3 keygen")
+    func hqc3() throws { _ = try HQC3.PrivateKey() }
 
-    @Test("HQC-256 keygen")
-    func hqc256() throws { _ = try HQC256.PrivateKey() }
+    @Test("HQC-5 keygen")
+    func hqc5() throws { _ = try HQC5.PrivateKey() }
 
     @Test("Classic McEliece 348864 keygen")
     func classicMcEliece348864() throws { _ = try ClassicMcEliece348864.PrivateKey() }
@@ -47,6 +47,21 @@ import Foundation
     func frodo1344AES() throws { _ = try FrodoKEM1344AES.PrivateKey() }
     @Test("FrodoKEM-1344-SHAKE keygen")
     func frodo1344SHAKE() throws { _ = try FrodoKEM1344SHAKE.PrivateKey() }
+
+    // MARK: - KEM key generation: eFrodoKEM (ephemeral, pre-0.16.0 FrodoKEM)
+
+    @Test("eFrodoKEM-640-AES keygen")
+    func efrodo640AES() throws { _ = try EFrodoKEM640AES.PrivateKey() }
+    @Test("eFrodoKEM-640-SHAKE keygen")
+    func efrodo640SHAKE() throws { _ = try EFrodoKEM640SHAKE.PrivateKey() }
+    @Test("eFrodoKEM-976-AES keygen")
+    func efrodo976AES() throws { _ = try EFrodoKEM976AES.PrivateKey() }
+    @Test("eFrodoKEM-976-SHAKE keygen")
+    func efrodo976SHAKE() throws { _ = try EFrodoKEM976SHAKE.PrivateKey() }
+    @Test("eFrodoKEM-1344-AES keygen")
+    func efrodo1344AES() throws { _ = try EFrodoKEM1344AES.PrivateKey() }
+    @Test("eFrodoKEM-1344-SHAKE keygen")
+    func efrodo1344SHAKE() throws { _ = try EFrodoKEM1344SHAKE.PrivateKey() }
 
     // MARK: - KEM key generation: NTRU
 
@@ -91,43 +106,43 @@ import Foundation
     @Test("FalconPadded-1024 keygen")
     func falconPadded1024() throws { _ = try FalconPadded1024.PrivateKey() }
 
-    // MARK: - Signature key generation: SPHINCS+
+    // MARK: - Signature key generation: MQOM2
 
-    @Test("SPHINCS+-SHA2-128f-simple keygen")
-    func sphincsSHA2128f() throws { _ = try SPHINCSSHA2128fSimple.PrivateKey() }
+    @Test("mqom2_cat1_gf16_fast_r3 keygen")
+    func mqom2Cat1Gf16FastR3() throws { _ = try MQOM2Cat1GF16FastR3.PrivateKey() }
 
-    @Test("SPHINCS+-SHA2-128s-simple keygen")
-    func sphincsSHA2128s() throws { _ = try SPHINCSSHA2128sSimple.PrivateKey() }
+    @Test("mqom2_cat1_gf16_fast_r5 keygen")
+    func mqom2Cat1Gf16FastR5() throws { _ = try MQOM2Cat1GF16FastR5.PrivateKey() }
 
-    @Test("SPHINCS+-SHA2-192f-simple keygen")
-    func sphincsSHA2192f() throws { _ = try SPHINCSSHA2192fSimple.PrivateKey() }
+    @Test("mqom2_cat1_gf16_short_r3 keygen")
+    func mqom2Cat1Gf16ShortR3() throws { _ = try MQOM2Cat1GF16ShortR3.PrivateKey() }
 
-    @Test("SPHINCS+-SHA2-192s-simple keygen")
-    func sphincsSHA2192s() throws { _ = try SPHINCSSHA2192sSimple.PrivateKey() }
+    @Test("mqom2_cat1_gf16_short_r5 keygen")
+    func mqom2Cat1Gf16ShortR5() throws { _ = try MQOM2Cat1GF16ShortR5.PrivateKey() }
 
-    @Test("SPHINCS+-SHA2-256f-simple keygen")
-    func sphincsSHA2256f() throws { _ = try SPHINCSSHA2256fSimple.PrivateKey() }
+    @Test("mqom2_cat3_gf16_fast_r3 keygen")
+    func mqom2Cat3Gf16FastR3() throws { _ = try MQOM2Cat3GF16FastR3.PrivateKey() }
 
-    @Test("SPHINCS+-SHA2-256s-simple keygen")
-    func sphincsSHA2256s() throws { _ = try SPHINCSSHA2256sSimple.PrivateKey() }
+    @Test("mqom2_cat3_gf16_fast_r5 keygen")
+    func mqom2Cat3Gf16FastR5() throws { _ = try MQOM2Cat3GF16FastR5.PrivateKey() }
 
-    @Test("SPHINCS+-SHAKE-128f-simple keygen")
-    func sphincsSHAKE128f() throws { _ = try SPHINCSSHAKE128fSimple.PrivateKey() }
+    @Test("mqom2_cat3_gf16_short_r3 keygen")
+    func mqom2Cat3Gf16ShortR3() throws { _ = try MQOM2Cat3GF16ShortR3.PrivateKey() }
 
-    @Test("SPHINCS+-SHAKE-128s-simple keygen")
-    func sphincsSHAKE128s() throws { _ = try SPHINCSSHAKE128sSimple.PrivateKey() }
+    @Test("mqom2_cat3_gf16_short_r5 keygen")
+    func mqom2Cat3Gf16ShortR5() throws { _ = try MQOM2Cat3GF16ShortR5.PrivateKey() }
 
-    @Test("SPHINCS+-SHAKE-192f-simple keygen")
-    func sphincsSHAKE192f() throws { _ = try SPHINCSSHAKE192fSimple.PrivateKey() }
+    @Test("mqom2_cat5_gf16_fast_r3 keygen")
+    func mqom2Cat5Gf16FastR3() throws { _ = try MQOM2Cat5GF16FastR3.PrivateKey() }
 
-    @Test("SPHINCS+-SHAKE-192s-simple keygen")
-    func sphincsSHAKE192s() throws { _ = try SPHINCSSHAKE192sSimple.PrivateKey() }
+    @Test("mqom2_cat5_gf16_fast_r5 keygen")
+    func mqom2Cat5Gf16FastR5() throws { _ = try MQOM2Cat5GF16FastR5.PrivateKey() }
 
-    @Test("SPHINCS+-SHAKE-256f-simple keygen")
-    func sphincsSHAKE256f() throws { _ = try SPHINCSSHAKE256fSimple.PrivateKey() }
+    @Test("mqom2_cat5_gf16_short_r3 keygen")
+    func mqom2Cat5Gf16ShortR3() throws { _ = try MQOM2Cat5GF16ShortR3.PrivateKey() }
 
-    @Test("SPHINCS+-SHAKE-256s-simple keygen")
-    func sphincsSHAKE256s() throws { _ = try SPHINCSSHAKE256sSimple.PrivateKey() }
+    @Test("mqom2_cat5_gf16_short_r5 keygen")
+    func mqom2Cat5Gf16ShortR5() throws { _ = try MQOM2Cat5GF16ShortR5.PrivateKey() }
 
     // MARK: - Signature key generation: CROSS
 

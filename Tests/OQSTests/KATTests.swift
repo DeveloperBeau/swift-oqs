@@ -134,4 +134,41 @@ import Foundation
         let blob = key.publicKey.rawRepresentation + (serialized ?? Data()) + sig
         #expect(KAT.sha3_256Hex(blob) == (try KATHashes.shared.hash(for: "LMS_SHA256_H5_W1")))
     }
+
+    // eFrodoKEM is the pre-0.16.0 FrodoKEM algorithm renamed; its digest must
+    // equal the FrodoKEM-640-AES anchor committed before the 0.16.0 bump —
+    // that identity is the cross-version check that the C output is unchanged.
+    @Test("eFrodoKEM-640-AES KAT digest matches committed hash")
+    func efrodo640aesKAT() throws {
+        KAT.seedDeterministicRNG()
+        defer { KAT.restoreSystemRNG() }
+        let sk = try EFrodoKEM640AES.PrivateKey()
+        let sealed = try sk.publicKey.generateSharedSecret()
+        let blob = sk.publicKey.rawRepresentation + sk.rawRepresentation
+            + sealed.ciphertext + sealed.sharedSecret.rawRepresentation
+        #expect(KAT.sha3_256Hex(blob) == (try KATHashes.shared.hash(for: "eFrodoKEM-640-AES")))
+    }
+
+    @Test("HQC-1 KAT digest matches committed hash")
+    func hqc1KAT() throws {
+        KAT.seedDeterministicRNG()
+        defer { KAT.restoreSystemRNG() }
+        let sk = try HQC1.PrivateKey()
+        let sealed = try sk.publicKey.generateSharedSecret()
+        let blob = sk.publicKey.rawRepresentation + sk.rawRepresentation
+            + sealed.ciphertext + sealed.sharedSecret.rawRepresentation
+        #expect(KAT.sha3_256Hex(blob) == (try KATHashes.shared.hash(for: "HQC-1")))
+    }
+
+    @Test("mqom2_cat1_gf16_fast_r3 KAT digest matches committed hash")
+    func mqom2Cat1FastR3KAT() throws {
+        KAT.seedDeterministicRNG()
+        defer { KAT.restoreSystemRNG() }
+        let blob: Data = try onLargeStack {
+            let key = try MQOM2Cat1GF16FastR3.PrivateKey()
+            let sig = try key.signature(for: Data("KAT".utf8))
+            return key.publicKey.rawRepresentation + key.rawRepresentation + sig
+        }
+        #expect(KAT.sha3_256Hex(blob) == (try KATHashes.shared.hash(for: "mqom2_cat1_gf16_fast_r3")))
+    }
 }

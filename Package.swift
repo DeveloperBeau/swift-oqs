@@ -45,11 +45,13 @@ let cliboqsExclude: [String] = [
     "src/kem/ml_kem/mlkem-native_ml-kem-512_x86_64",
     "src/kem/ml_kem/mlkem-native_ml-kem-768_x86_64",
     "src/kem/ml_kem/mlkem-native_ml-kem-1024_x86_64",
+    "src/sig/ml_dsa/mldsa-native_ml-dsa-44_x86_64",
+    "src/sig/ml_dsa/mldsa-native_ml-dsa-65_x86_64",
+    "src/sig/ml_dsa/mldsa-native_ml-dsa-87_x86_64",
     "src/kem/ntru/pqclean_ntruhps2048509_avx2",
     "src/kem/ntru/pqclean_ntruhps2048677_avx2",
     "src/kem/ntru/pqclean_ntruhps4096821_avx2",
     "src/kem/ntru/pqclean_ntruhrss701_avx2",
-    "src/kem/ntruprime/pqclean_sntrup761_avx2",
     "src/sig/cross/upcross_cross-rsdp-128-balanced_avx2",
     "src/sig/cross/upcross_cross-rsdp-128-fast_avx2",
     "src/sig/cross/upcross_cross-rsdp-128-small_avx2",
@@ -72,9 +74,6 @@ let cliboqsExclude: [String] = [
     "src/sig/falcon/pqclean_falcon-1024_avx2",
     "src/sig/falcon/pqclean_falcon-padded-512_avx2",
     "src/sig/falcon/pqclean_falcon-padded-1024_avx2",
-    "src/sig/ml_dsa/pqcrystals-dilithium-standard_ml-dsa-44_avx2",
-    "src/sig/ml_dsa/pqcrystals-dilithium-standard_ml-dsa-65_avx2",
-    "src/sig/ml_dsa/pqcrystals-dilithium-standard_ml-dsa-87_avx2",
     "src/sig/snova/snova_SNOVA_24_5_4_avx2",
     "src/sig/snova/snova_SNOVA_24_5_4_SHAKE_avx2",
     "src/sig/snova/snova_SNOVA_24_5_4_esk_avx2",
@@ -87,18 +86,6 @@ let cliboqsExclude: [String] = [
     "src/sig/snova/snova_SNOVA_49_11_3_avx2",
     "src/sig/snova/snova_SNOVA_56_25_2_avx2",
     "src/sig/snova/snova_SNOVA_60_10_4_avx2",
-    "src/sig/sphincs/pqclean_sphincs-sha2-128f-simple_avx2",
-    "src/sig/sphincs/pqclean_sphincs-sha2-128s-simple_avx2",
-    "src/sig/sphincs/pqclean_sphincs-sha2-192f-simple_avx2",
-    "src/sig/sphincs/pqclean_sphincs-sha2-192s-simple_avx2",
-    "src/sig/sphincs/pqclean_sphincs-sha2-256f-simple_avx2",
-    "src/sig/sphincs/pqclean_sphincs-sha2-256s-simple_avx2",
-    "src/sig/sphincs/pqclean_sphincs-shake-128f-simple_avx2",
-    "src/sig/sphincs/pqclean_sphincs-shake-128s-simple_avx2",
-    "src/sig/sphincs/pqclean_sphincs-shake-192f-simple_avx2",
-    "src/sig/sphincs/pqclean_sphincs-shake-192s-simple_avx2",
-    "src/sig/sphincs/pqclean_sphincs-shake-256f-simple_avx2",
-    "src/sig/sphincs/pqclean_sphincs-shake-256s-simple_avx2",
     // AArch64/NEON optimized
     "src/kem/kyber/oldpqclean_kyber512_aarch64",
     "src/kem/kyber/oldpqclean_kyber768_aarch64",
@@ -106,6 +93,9 @@ let cliboqsExclude: [String] = [
     "src/kem/ml_kem/mlkem-native_ml-kem-512_aarch64",
     "src/kem/ml_kem/mlkem-native_ml-kem-768_aarch64",
     "src/kem/ml_kem/mlkem-native_ml-kem-1024_aarch64",
+    "src/sig/ml_dsa/mldsa-native_ml-dsa-44_aarch64",
+    "src/sig/ml_dsa/mldsa-native_ml-dsa-65_aarch64",
+    "src/sig/ml_dsa/mldsa-native_ml-dsa-87_aarch64",
     "src/sig/falcon/pqclean_falcon-512_aarch64",
     "src/sig/falcon/pqclean_falcon-1024_aarch64",
     "src/sig/falcon/pqclean_falcon-padded-512_aarch64",
@@ -137,13 +127,70 @@ let cliboqsExclude: [String] = [
     "src/sig/snova/snova_SNOVA_56_25_2_opt",
     "src/sig/snova/snova_SNOVA_60_10_4_opt",
 
-    // ML-DSA: each _ref dir is compiled via its generated unity TU. Excluding
-    // a dir stops SPM compiling its .c as separate TUs; the files stay on disk
-    // so the unity #include reaches them. The sig_ml_dsa_*.c glue compiles
-    // normally (sig.c references each variant's _new() under #ifdef).
-    "src/sig/ml_dsa/pqcrystals-dilithium-standard_ml-dsa-44_ref",
-    "src/sig/ml_dsa/pqcrystals-dilithium-standard_ml-dsa-65_ref",
-    "src/sig/ml_dsa/pqcrystals-dilithium-standard_ml-dsa-87_ref",
+    // HQC: each pqc-hqc_hqc-N_ref dir is compiled via its generated unity TU
+    // (which bakes in PQCHQC_NAMESPACE_PREFIX + HQC_ARCH_REF); the raw dirs are
+    // excluded so SPM does not compile their .c separately. The kem_hqc_N.c
+    // glue compiles normally.
+    "src/kem/hqc/pqc-hqc_hqc-1_ref",
+    "src/kem/hqc/pqc-hqc_hqc-3_ref",
+    "src/kem/hqc/pqc-hqc_hqc-5_ref",
+
+    // MQOM: all C sources live in mqom_mqom_common/ and are compiled once per
+    // variant via generated unity TUs (unity_mqom_mqom2_*.c) with per-variant
+    // namespace + parameter defines. The glue sig_mqom_<variant>.c is part of
+    // each unity TU (it needs the same defines), so both the common dir and the
+    // glue files are excluded from normal compilation.
+    "src/sig/mqom/mqom_mqom_common",
+    "src/sig/mqom/sig_mqom_mqom2_cat1_gf16_fast_r3.c",
+    "src/sig/mqom/sig_mqom_mqom2_cat1_gf16_fast_r5.c",
+    "src/sig/mqom/sig_mqom_mqom2_cat1_gf16_short_r3.c",
+    "src/sig/mqom/sig_mqom_mqom2_cat1_gf16_short_r5.c",
+    "src/sig/mqom/sig_mqom_mqom2_cat3_gf16_fast_r3.c",
+    "src/sig/mqom/sig_mqom_mqom2_cat3_gf16_fast_r5.c",
+    "src/sig/mqom/sig_mqom_mqom2_cat3_gf16_short_r3.c",
+    "src/sig/mqom/sig_mqom_mqom2_cat3_gf16_short_r5.c",
+    "src/sig/mqom/sig_mqom_mqom2_cat5_gf16_fast_r3.c",
+    "src/sig/mqom/sig_mqom_mqom2_cat5_gf16_fast_r5.c",
+    "src/sig/mqom/sig_mqom_mqom2_cat5_gf16_short_r3.c",
+    "src/sig/mqom/sig_mqom_mqom2_cat5_gf16_short_r5.c",
+    // MQOM variant dirs hold only per-variant parameter headers (no .c), but
+    // exclude them so SPM does not warn about unhandled files.
+    "src/sig/mqom/mqom_mqom2_cat1_gf16_fast_r3_default",
+    "src/sig/mqom/mqom_mqom2_cat1_gf16_fast_r3_memopt",
+    "src/sig/mqom/mqom_mqom2_cat1_gf16_fast_r3_avx2",
+    "src/sig/mqom/mqom_mqom2_cat1_gf16_fast_r5_default",
+    "src/sig/mqom/mqom_mqom2_cat1_gf16_fast_r5_memopt",
+    "src/sig/mqom/mqom_mqom2_cat1_gf16_fast_r5_avx2",
+    "src/sig/mqom/mqom_mqom2_cat1_gf16_short_r3_default",
+    "src/sig/mqom/mqom_mqom2_cat1_gf16_short_r3_memopt",
+    "src/sig/mqom/mqom_mqom2_cat1_gf16_short_r3_avx2",
+    "src/sig/mqom/mqom_mqom2_cat1_gf16_short_r5_default",
+    "src/sig/mqom/mqom_mqom2_cat1_gf16_short_r5_memopt",
+    "src/sig/mqom/mqom_mqom2_cat1_gf16_short_r5_avx2",
+    "src/sig/mqom/mqom_mqom2_cat3_gf16_fast_r3_default",
+    "src/sig/mqom/mqom_mqom2_cat3_gf16_fast_r3_memopt",
+    "src/sig/mqom/mqom_mqom2_cat3_gf16_fast_r3_avx2",
+    "src/sig/mqom/mqom_mqom2_cat3_gf16_fast_r5_default",
+    "src/sig/mqom/mqom_mqom2_cat3_gf16_fast_r5_memopt",
+    "src/sig/mqom/mqom_mqom2_cat3_gf16_fast_r5_avx2",
+    "src/sig/mqom/mqom_mqom2_cat3_gf16_short_r3_default",
+    "src/sig/mqom/mqom_mqom2_cat3_gf16_short_r3_memopt",
+    "src/sig/mqom/mqom_mqom2_cat3_gf16_short_r3_avx2",
+    "src/sig/mqom/mqom_mqom2_cat3_gf16_short_r5_default",
+    "src/sig/mqom/mqom_mqom2_cat3_gf16_short_r5_memopt",
+    "src/sig/mqom/mqom_mqom2_cat3_gf16_short_r5_avx2",
+    "src/sig/mqom/mqom_mqom2_cat5_gf16_fast_r3_default",
+    "src/sig/mqom/mqom_mqom2_cat5_gf16_fast_r3_memopt",
+    "src/sig/mqom/mqom_mqom2_cat5_gf16_fast_r3_avx2",
+    "src/sig/mqom/mqom_mqom2_cat5_gf16_fast_r5_default",
+    "src/sig/mqom/mqom_mqom2_cat5_gf16_fast_r5_memopt",
+    "src/sig/mqom/mqom_mqom2_cat5_gf16_fast_r5_avx2",
+    "src/sig/mqom/mqom_mqom2_cat5_gf16_short_r3_default",
+    "src/sig/mqom/mqom_mqom2_cat5_gf16_short_r3_memopt",
+    "src/sig/mqom/mqom_mqom2_cat5_gf16_short_r3_avx2",
+    "src/sig/mqom/mqom_mqom2_cat5_gf16_short_r5_default",
+    "src/sig/mqom/mqom_mqom2_cat5_gf16_short_r5_memopt",
+    "src/sig/mqom/mqom_mqom2_cat5_gf16_short_r5_avx2",
 
     // UOV: each _ref dir is compiled via its generated unity TU (which bakes in
     // the param triple + backend + _UTILS_OQS_ defines); the raw variant dirs
@@ -216,10 +263,11 @@ let cliboqsExclude: [String] = [
     // exclude the raw dir so SPM does not compile its files separately.
     "src/kem/bike/additional_r4",
 
-    // FrodoKEM: files that are textually #included by other .c files
+    // FrodoKEM: files that are textually #included by the per-variant driver
+    // files (frodo/frodoNNNx.c, efrodo/efrodoNNNx.c) — e.g. frodo/frodo640aes.c
+    // #includes kem.c, ../noise.c, ../util.c, and a frodo_macrify backend.
     "src/kem/frodokem/external/noise.c",
     "src/kem/frodokem/external/util.c",
-    "src/kem/frodokem/external/kem.c",
     "src/kem/frodokem/external/frodo_macrify_aes_portable.c",
     "src/kem/frodokem/external/frodo_macrify_aes_avx2.c",
     "src/kem/frodokem/external/frodo_macrify_shake_portable.c",
@@ -227,13 +275,21 @@ let cliboqsExclude: [String] = [
     "src/kem/frodokem/external/frodo_macrify_optimized.c",
     "src/kem/frodokem/external/frodo_macrify_reference.c",
     "src/kem/frodokem/external/frodo_macrify_as_plus_e.c",
+    "src/kem/frodokem/external/frodo/kem.c",
+    "src/kem/frodokem/external/efrodo/ekem.c",
     // FrodoKEM AVX2 variants
-    "src/kem/frodokem/external/frodo640aes_avx2.c",
-    "src/kem/frodokem/external/frodo640shake_avx2.c",
-    "src/kem/frodokem/external/frodo976aes_avx2.c",
-    "src/kem/frodokem/external/frodo976shake_avx2.c",
-    "src/kem/frodokem/external/frodo1344aes_avx2.c",
-    "src/kem/frodokem/external/frodo1344shake_avx2.c",
+    "src/kem/frodokem/external/frodo/frodo640aes_avx2.c",
+    "src/kem/frodokem/external/frodo/frodo640shake_avx2.c",
+    "src/kem/frodokem/external/frodo/frodo976aes_avx2.c",
+    "src/kem/frodokem/external/frodo/frodo976shake_avx2.c",
+    "src/kem/frodokem/external/frodo/frodo1344aes_avx2.c",
+    "src/kem/frodokem/external/frodo/frodo1344shake_avx2.c",
+    "src/kem/frodokem/external/efrodo/efrodo640aes_avx2.c",
+    "src/kem/frodokem/external/efrodo/efrodo640shake_avx2.c",
+    "src/kem/frodokem/external/efrodo/efrodo976aes_avx2.c",
+    "src/kem/frodokem/external/efrodo/efrodo976shake_avx2.c",
+    "src/kem/frodokem/external/efrodo/efrodo1344aes_avx2.c",
+    "src/kem/frodokem/external/efrodo/efrodo1344shake_avx2.c",
 
     // Kyber: each _ref dir is compiled via its generated unity TU; the
     // kem_kyber_*.c glue compiles normally. Non-portable variants (libjade,
@@ -405,6 +461,27 @@ let package = Package(
                 .headerSearchPath("src/sig"),
                 .headerSearchPath("src/sig_stfl"),
                 .headerSearchPath("include"),
+                // MQOM: piop_cache.h angle-includes in-family headers
+                // (<fields.h>), so the common dir must be on the search path.
+                .headerSearchPath("src/sig/mqom/mqom_mqom_common"),
+                // MQOM: the generic mqom_mqom_common/mqom2_parameters.h
+                // dispatch-includes a uniquely-named per-variant header
+                // (mqom2_parameters_<cat>-<field>-<tradeoff>-<r>.h) that lives
+                // in that variant's _default dir; CMake puts the dir on the
+                // include path per OBJECT target, SPM cannot, so every variant
+                // dir is listed here (names are unique, no collisions).
+                .headerSearchPath("src/sig/mqom/mqom_mqom2_cat1_gf16_fast_r3_default"),
+                .headerSearchPath("src/sig/mqom/mqom_mqom2_cat1_gf16_fast_r5_default"),
+                .headerSearchPath("src/sig/mqom/mqom_mqom2_cat1_gf16_short_r3_default"),
+                .headerSearchPath("src/sig/mqom/mqom_mqom2_cat1_gf16_short_r5_default"),
+                .headerSearchPath("src/sig/mqom/mqom_mqom2_cat3_gf16_fast_r3_default"),
+                .headerSearchPath("src/sig/mqom/mqom_mqom2_cat3_gf16_fast_r5_default"),
+                .headerSearchPath("src/sig/mqom/mqom_mqom2_cat3_gf16_short_r3_default"),
+                .headerSearchPath("src/sig/mqom/mqom_mqom2_cat3_gf16_short_r5_default"),
+                .headerSearchPath("src/sig/mqom/mqom_mqom2_cat5_gf16_fast_r3_default"),
+                .headerSearchPath("src/sig/mqom/mqom_mqom2_cat5_gf16_fast_r5_default"),
+                .headerSearchPath("src/sig/mqom/mqom_mqom2_cat5_gf16_short_r3_default"),
+                .headerSearchPath("src/sig/mqom/mqom_mqom2_cat5_gf16_short_r5_default"),
             ]
         ),
         mayoTarget(name: "CliboqsMAYO1", variantDir: "pqmayo_mayo-1_opt", variantMacro: "MAYO_1", stackEfficient: true),
