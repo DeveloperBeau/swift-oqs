@@ -24,12 +24,22 @@
 #include "mqom_mqom_common/keygen.c"
 #include "mqom_mqom_common/piop_bitslice.c"
 #include "mqom_mqom_common/piop_default.c"
+#define ExpandBatchingChallenge mqom_piop_memopt_ExpandBatchingChallenge
 #include "mqom_mqom_common/piop_memopt.c"
+#undef ExpandBatchingChallenge
 #include "mqom_mqom_common/prg.c"
 #include "mqom_mqom_common/rijndael_aes_ni.c"
+#define sbox mqom_rijndael_ct64_sbox
+#define rcon mqom_rijndael_ct64_rcon
 #include "mqom_mqom_common/rijndael_ct64.c"
+#undef sbox
+#undef rcon
 #include "mqom_mqom_common/rijndael_external.c"
+#define sbox mqom_rijndael_ref_sbox
+#define rcon mqom_rijndael_ref_rcon
 #include "mqom_mqom_common/rijndael_ref.c"
+#undef sbox
+#undef rcon
 #include "mqom_mqom_common/rijndael_table.c"
 #include "mqom_mqom_common/sign_memopt.c"
 #include "mqom_mqom_common/sign.c"

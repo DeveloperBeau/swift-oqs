@@ -303,7 +303,35 @@ generate_mqom_unity() {
                             sed -e 's/^-D//' -e 's/=/ /' -e 's/^/#define /'
                         echo "#include \"sig_mqom_${variant}.c\""
                         for f in "$DEST/$fam/mqom_mqom_common"/*.c; do
-                            echo "#include \"mqom_mqom_common/$(basename "$f")\""
+                            local b="$(basename "$f")"
+                            # Static-name collisions between files that CMake
+                            # compiles as separate TUs but the unity TU
+                            # concatenates: rename them per file via macros.
+                            case "$b" in
+                                rijndael_ref.c)
+                                    echo "#define sbox mqom_rijndael_ref_sbox"
+                                    echo "#define rcon mqom_rijndael_ref_rcon"
+                                    ;;
+                                rijndael_ct64.c)
+                                    # rijndael_ct64_enc.h defines its own
+                                    # static sbox[]/rcon[] copies
+                                    echo "#define sbox mqom_rijndael_ct64_sbox"
+                                    echo "#define rcon mqom_rijndael_ct64_rcon"
+                                    ;;
+                                piop_memopt.c)
+                                    echo "#define ExpandBatchingChallenge mqom_piop_memopt_ExpandBatchingChallenge"
+                                    ;;
+                            esac
+                            echo "#include \"mqom_mqom_common/$b\""
+                            case "$b" in
+                                rijndael_ref.c|rijndael_ct64.c)
+                                    echo "#undef sbox"
+                                    echo "#undef rcon"
+                                    ;;
+                                piop_memopt.c)
+                                    echo "#undef ExpandBatchingChallenge"
+                                    ;;
+                            esac
                         done
                     } > "$out"
                     echo "  generated $out"
