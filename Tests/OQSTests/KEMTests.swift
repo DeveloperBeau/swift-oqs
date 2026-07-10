@@ -30,25 +30,25 @@ import Foundation
         #expect(secret.rawRepresentation == sealed.sharedSecret.rawRepresentation)
     }
 
-    @Test("HQC-128 round-trip")
-    func roundTripHQC128() throws {
-        let privateKey = try HQC128.PrivateKey()
+    @Test("HQC-1 round-trip")
+    func roundTripHQC1() throws {
+        let privateKey = try HQC1.PrivateKey()
         let sealed = try privateKey.publicKey.generateSharedSecret()
         let secret = try privateKey.decryptSharedSecret(sealed.ciphertext)
         #expect(secret.rawRepresentation == sealed.sharedSecret.rawRepresentation)
     }
 
-    @Test("HQC-192 round-trip")
-    func roundTripHQC192() throws {
-        let privateKey = try HQC192.PrivateKey()
+    @Test("HQC-3 round-trip")
+    func roundTripHQC3() throws {
+        let privateKey = try HQC3.PrivateKey()
         let sealed = try privateKey.publicKey.generateSharedSecret()
         let secret = try privateKey.decryptSharedSecret(sealed.ciphertext)
         #expect(secret.rawRepresentation == sealed.sharedSecret.rawRepresentation)
     }
 
-    @Test("HQC-256 round-trip")
-    func roundTripHQC256() throws {
-        let privateKey = try HQC256.PrivateKey()
+    @Test("HQC-5 round-trip")
+    func roundTripHQC5() throws {
+        let privateKey = try HQC5.PrivateKey()
         let sealed = try privateKey.publicKey.generateSharedSecret()
         let secret = try privateKey.decryptSharedSecret(sealed.ciphertext)
         #expect(secret.rawRepresentation == sealed.sharedSecret.rawRepresentation)

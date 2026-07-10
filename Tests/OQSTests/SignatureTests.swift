@@ -48,14 +48,6 @@ private let testMessage = Data("Post-quantum cryptography is fun.".utf8)
         #expect(valid)
     }
 
-    @Test("SPHINCS+-SHA2-128f-simple sign/verify")
-    func roundTripSPHINCS() throws {
-        let signingKey = try SPHINCSSHA2128fSimple.PrivateKey()
-        let sig = try signingKey.signature(for: testMessage)
-        let valid = try signingKey.publicKey.isValidSignature(sig, for: testMessage)
-        #expect(valid)
-    }
-
     @Test("SLH-DSA-Pure-SHA2-128f sign/verify")
     func roundTripSLHDSA() throws {
         let signingKey = try SLHDSAPureSHA2128f.PrivateKey()

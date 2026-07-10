@@ -32,21 +32,6 @@ let valid = try signingKey.publicKey.isValidSignature(signature, for: messageDat
 - ``FalconPadded512``
 - ``FalconPadded1024``
 
-### SPHINCS+
-
-- ``SPHINCSSHA2128fSimple``
-- ``SPHINCSSHA2128sSimple``
-- ``SPHINCSSHA2192fSimple``
-- ``SPHINCSSHA2192sSimple``
-- ``SPHINCSSHA2256fSimple``
-- ``SPHINCSSHA2256sSimple``
-- ``SPHINCSSHAKE128fSimple``
-- ``SPHINCSSHAKE128sSimple``
-- ``SPHINCSSHAKE192fSimple``
-- ``SPHINCSSHAKE192sSimple``
-- ``SPHINCSSHAKE256fSimple``
-- ``SPHINCSSHAKE256sSimple``
-
 ### CROSS
 
 - ``CrossRSDP128Balanced``

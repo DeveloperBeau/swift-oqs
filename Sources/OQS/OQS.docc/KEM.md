@@ -90,9 +90,12 @@ let importedPub = try MLKEM768.PublicKey(rawRepresentation: pubData)
 
 ### HQC
 
-- ``HQC128``
-- ``HQC192``
-- ``HQC256``
+HQC implements the 20250822 specification (liboqs 0.16.0+). It is not
+interoperable with the pre-0.16.0 HQC-128/192/256 parameter sets.
+
+- ``HQC1``
+- ``HQC3``
+- ``HQC5``
 
 ### Classic McEliece
 

@@ -1,17 +1,20 @@
 import Foundation
 internal import Cliboqs
 
-/// HQC-192 key encapsulation (code-based KEM, NIST candidate, 192-bit security).
+/// HQC-1 key encapsulation (code-based KEM, NIST candidate, 128-bit security).
 ///
-/// Mid-range HQC parameter set. Same code-based design as HQC-128 with a
-/// larger security margin.
+/// A code-based alternative to lattice KEMs. Useful if you want algorithm
+/// diversity or don't fully trust lattice assumptions. Implements the
+/// 20250822 HQC specification (liboqs 0.16.0+); it replaces the former
+/// HQC-128 parameter set and is NOT interoperable with keys or ciphertexts
+/// produced by the older implementation.
 ///
 /// ```swift
 /// // Alice generates a key pair
-/// let alice = try HQC192.PrivateKey()
+/// let alice = try HQC1.PrivateKey()
 ///
 /// // Bob gets Alice's public key and creates a shared secret
-/// let pub = try HQC192.PublicKey(rawRepresentation: alicePublicKeyData)
+/// let pub = try HQC1.PublicKey(rawRepresentation: alicePublicKeyData)
 /// let result = try pub.generateSharedSecret()
 /// // Bob has result.sharedSecret. Send result.ciphertext to Alice
 ///
@@ -26,15 +29,15 @@ internal import Cliboqs
 /// Keys can be saved and loaded:
 /// ```swift
 /// let saved = alice.rawRepresentation
-/// let loaded = try HQC192.PrivateKey(
+/// let loaded = try HQC1.PrivateKey(
 ///     rawRepresentation: saved,
 ///     publicKeyRepresentation: alice.publicKey.rawRepresentation
 /// )
 /// ```
-public enum HQC192: Sendable {
-    static let algorithmName = "HQC-192"
+public enum HQC1: Sendable {
+    static let algorithmName = "HQC-1"
 
-    /// A HQC192 private (decapsulation) key.
+    /// A HQC1 private (decapsulation) key.
     public struct PrivateKey: Sendable {
         /// The raw key bytes.
         public let rawRepresentation: Data
@@ -43,14 +46,14 @@ public enum HQC192: Sendable {
 
         /// Generates a new random key pair.
         public init() throws {
-            let kp = try kemGenerateKeyPair(algorithm: HQC192.algorithmName)
+            let kp = try kemGenerateKeyPair(algorithm: HQC1.algorithmName)
             self.rawRepresentation = kp.secretKey
             self.publicKey = PublicKey(unchecked: kp.publicKey)
         }
 
         /// Imports a private key from raw bytes.
         public init(rawRepresentation: Data, publicKeyRepresentation: Data) throws {
-            let lengths = try kemExpectedKeyLengths(algorithm: HQC192.algorithmName)
+            let lengths = try kemExpectedKeyLengths(algorithm: HQC1.algorithmName)
             guard rawRepresentation.count == lengths.secretKey else {
                 throw OQSError.invalidKeySize(expected: lengths.secretKey, actual: rawRepresentation.count)
             }
@@ -63,19 +66,19 @@ public enum HQC192: Sendable {
 
         /// Decrypts a shared secret from the given ciphertext.
         public func decryptSharedSecret(_ ciphertext: Data) throws -> SharedSecret {
-            let ss = try kemDecapsulate(algorithm: HQC192.algorithmName, ciphertext: ciphertext, secretKey: rawRepresentation)
+            let ss = try kemDecapsulate(algorithm: HQC1.algorithmName, ciphertext: ciphertext, secretKey: rawRepresentation)
             return SharedSecret(rawRepresentation: ss)
         }
     }
 
-    /// A HQC192 public (encapsulation) key.
+    /// A HQC1 public (encapsulation) key.
     public struct PublicKey: Sendable {
         /// The raw key bytes.
         public let rawRepresentation: Data
 
         /// Imports a public key from raw bytes.
         public init(rawRepresentation: Data) throws {
-            let lengths = try kemExpectedKeyLengths(algorithm: HQC192.algorithmName)
+            let lengths = try kemExpectedKeyLengths(algorithm: HQC1.algorithmName)
             guard rawRepresentation.count == lengths.publicKey else {
                 throw OQSError.invalidKeySize(expected: lengths.publicKey, actual: rawRepresentation.count)
             }
@@ -88,7 +91,7 @@ public enum HQC192: Sendable {
 
         /// Generates a new shared secret using this public key.
         public func generateSharedSecret() throws -> SharedSecretResult {
-            let result = try kemEncapsulate(algorithm: HQC192.algorithmName, publicKey: rawRepresentation)
+            let result = try kemEncapsulate(algorithm: HQC1.algorithmName, publicKey: rawRepresentation)
             return SharedSecretResult(
                 sharedSecret: SharedSecret(rawRepresentation: result.sharedSecret),
                 ciphertext: result.ciphertext

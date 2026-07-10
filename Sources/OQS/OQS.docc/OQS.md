@@ -63,9 +63,9 @@ So you do what TLS, Signal, and SSH all do: use a KEM to agree on a shared secre
 - ``ClassicMcEliece6688128``
 - ``ClassicMcEliece6960119``
 - ``ClassicMcEliece8192128``
-- ``HQC128``
-- ``HQC192``
-- ``HQC256``
+- ``HQC1``
+- ``HQC3``
+- ``HQC5``
 - ``BIKEL1``
 - ``BIKEL3``
 - ``BIKEL5``
@@ -79,8 +79,6 @@ So you do what TLS, Signal, and SSH all do: use a KEM to agree on a shared secre
 - ``Falcon1024``
 - ``FalconPadded512``
 - ``FalconPadded1024``
-- ``SPHINCSSHA2128fSimple``
-- ``SPHINCSSHA2256fSimple``
 - ``SLHDSAPureSHA2128f``
 - ``SLHDSA``
 - ``CrossRSDP128Fast``

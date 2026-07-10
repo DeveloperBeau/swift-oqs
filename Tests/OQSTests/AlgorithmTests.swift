@@ -15,14 +15,14 @@ import Foundation
     @Test("ML-KEM-1024 keygen")
     func mlkem1024() throws { _ = try MLKEM1024.PrivateKey() }
 
-    @Test("HQC-128 keygen")
-    func hqc128() throws { _ = try HQC128.PrivateKey() }
+    @Test("HQC-1 keygen")
+    func hqc1() throws { _ = try HQC1.PrivateKey() }
 
-    @Test("HQC-192 keygen")
-    func hqc192() throws { _ = try HQC192.PrivateKey() }
+    @Test("HQC-3 keygen")
+    func hqc3() throws { _ = try HQC3.PrivateKey() }
 
-    @Test("HQC-256 keygen")
-    func hqc256() throws { _ = try HQC256.PrivateKey() }
+    @Test("HQC-5 keygen")
+    func hqc5() throws { _ = try HQC5.PrivateKey() }
 
     @Test("Classic McEliece 348864 keygen")
     func classicMcEliece348864() throws { _ = try ClassicMcEliece348864.PrivateKey() }
@@ -90,44 +90,6 @@ import Foundation
 
     @Test("FalconPadded-1024 keygen")
     func falconPadded1024() throws { _ = try FalconPadded1024.PrivateKey() }
-
-    // MARK: - Signature key generation: SPHINCS+
-
-    @Test("SPHINCS+-SHA2-128f-simple keygen")
-    func sphincsSHA2128f() throws { _ = try SPHINCSSHA2128fSimple.PrivateKey() }
-
-    @Test("SPHINCS+-SHA2-128s-simple keygen")
-    func sphincsSHA2128s() throws { _ = try SPHINCSSHA2128sSimple.PrivateKey() }
-
-    @Test("SPHINCS+-SHA2-192f-simple keygen")
-    func sphincsSHA2192f() throws { _ = try SPHINCSSHA2192fSimple.PrivateKey() }
-
-    @Test("SPHINCS+-SHA2-192s-simple keygen")
-    func sphincsSHA2192s() throws { _ = try SPHINCSSHA2192sSimple.PrivateKey() }
-
-    @Test("SPHINCS+-SHA2-256f-simple keygen")
-    func sphincsSHA2256f() throws { _ = try SPHINCSSHA2256fSimple.PrivateKey() }
-
-    @Test("SPHINCS+-SHA2-256s-simple keygen")
-    func sphincsSHA2256s() throws { _ = try SPHINCSSHA2256sSimple.PrivateKey() }
-
-    @Test("SPHINCS+-SHAKE-128f-simple keygen")
-    func sphincsSHAKE128f() throws { _ = try SPHINCSSHAKE128fSimple.PrivateKey() }
-
-    @Test("SPHINCS+-SHAKE-128s-simple keygen")
-    func sphincsSHAKE128s() throws { _ = try SPHINCSSHAKE128sSimple.PrivateKey() }
-
-    @Test("SPHINCS+-SHAKE-192f-simple keygen")
-    func sphincsSHAKE192f() throws { _ = try SPHINCSSHAKE192fSimple.PrivateKey() }
-
-    @Test("SPHINCS+-SHAKE-192s-simple keygen")
-    func sphincsSHAKE192s() throws { _ = try SPHINCSSHAKE192sSimple.PrivateKey() }
-
-    @Test("SPHINCS+-SHAKE-256f-simple keygen")
-    func sphincsSHAKE256f() throws { _ = try SPHINCSSHAKE256fSimple.PrivateKey() }
-
-    @Test("SPHINCS+-SHAKE-256s-simple keygen")
-    func sphincsSHAKE256s() throws { _ = try SPHINCSSHAKE256sSimple.PrivateKey() }
 
     // MARK: - Signature key generation: CROSS
 
