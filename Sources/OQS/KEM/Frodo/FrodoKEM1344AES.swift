@@ -8,6 +8,11 @@ internal import Cliboqs
 /// relying on plain (unstructured) learning-with-errors. This variant uses AES-128 to
 /// generate the public matrix A, which is fast on CPUs with AES-NI hardware support.
 ///
+/// As of liboqs 0.16.0 this is the SALTED FrodoKEM variant, recommended when a
+/// keypair encapsulates many ciphertexts. It is NOT interoperable with the
+/// pre-0.16.0 (ephemeral) FrodoKEM, which is now available as the
+/// ``EFrodoKEM1344AES`` type.
+///
 /// ```swift
 /// // Alice generates a key pair
 /// let alice = try FrodoKEM1344AES.PrivateKey()

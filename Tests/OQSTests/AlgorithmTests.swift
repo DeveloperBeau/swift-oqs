@@ -48,6 +48,21 @@ import Foundation
     @Test("FrodoKEM-1344-SHAKE keygen")
     func frodo1344SHAKE() throws { _ = try FrodoKEM1344SHAKE.PrivateKey() }
 
+    // MARK: - KEM key generation: eFrodoKEM (ephemeral, pre-0.16.0 FrodoKEM)
+
+    @Test("eFrodoKEM-640-AES keygen")
+    func efrodo640AES() throws { _ = try EFrodoKEM640AES.PrivateKey() }
+    @Test("eFrodoKEM-640-SHAKE keygen")
+    func efrodo640SHAKE() throws { _ = try EFrodoKEM640SHAKE.PrivateKey() }
+    @Test("eFrodoKEM-976-AES keygen")
+    func efrodo976AES() throws { _ = try EFrodoKEM976AES.PrivateKey() }
+    @Test("eFrodoKEM-976-SHAKE keygen")
+    func efrodo976SHAKE() throws { _ = try EFrodoKEM976SHAKE.PrivateKey() }
+    @Test("eFrodoKEM-1344-AES keygen")
+    func efrodo1344AES() throws { _ = try EFrodoKEM1344AES.PrivateKey() }
+    @Test("eFrodoKEM-1344-SHAKE keygen")
+    func efrodo1344SHAKE() throws { _ = try EFrodoKEM1344SHAKE.PrivateKey() }
+
     // MARK: - KEM key generation: NTRU
 
     @Test("NTRU-HPS-2048-509 keygen")

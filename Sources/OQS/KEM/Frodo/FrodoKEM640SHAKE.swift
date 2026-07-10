@@ -8,6 +8,11 @@ internal import Cliboqs
 /// relying on plain (unstructured) learning-with-errors. This variant uses SHAKE128 to
 /// generate the public matrix A, avoiding any dependency on AES hardware.
 ///
+/// As of liboqs 0.16.0 this is the SALTED FrodoKEM variant, recommended when a
+/// keypair encapsulates many ciphertexts. It is NOT interoperable with the
+/// pre-0.16.0 (ephemeral) FrodoKEM, which is now available as the
+/// ``EFrodoKEM640SHAKE`` type.
+///
 /// ```swift
 /// // Alice generates a key pair
 /// let alice = try FrodoKEM640SHAKE.PrivateKey()

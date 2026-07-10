@@ -1,24 +1,23 @@
 import Foundation
 internal import Cliboqs
 
-/// FrodoKEM-976-SHAKE key encapsulation (NIST Round 3 alternate, ~192-bit security, SHAKE-based PRF).
+/// eFrodoKEM-1344-AES key encapsulation (NIST Round 3 alternate, ~256-bit security, AES-based PRF).
 ///
-/// Conservative LWE-based KEM at NIST level 3 (~192-bit security). FrodoKEM trades
+/// Conservative LWE-based KEM at NIST level 5 (~256-bit security). FrodoKEM trades
 /// larger keys and ciphertexts than ML-KEM for more conservative security assumptions,
-/// relying on plain (unstructured) learning-with-errors. This variant uses SHAKE128 to
-/// generate the public matrix A, avoiding any dependency on AES hardware.
+/// relying on plain (unstructured) learning-with-errors. This variant uses AES-128 to
+/// generate the public matrix A, which is fast on CPUs with AES-NI hardware support.
 ///
-/// As of liboqs 0.16.0 this is the SALTED FrodoKEM variant, recommended when a
-/// keypair encapsulates many ciphertexts. It is NOT interoperable with the
-/// pre-0.16.0 (ephemeral) FrodoKEM, which is now available as the
-/// ``EFrodoKEM976SHAKE`` type.
+/// Ephemeral FrodoKEM: the algorithm named FrodoKEM before liboqs 0.16.0,
+/// recommended when each keypair encapsulates only a small number of shared
+/// secrets. For long-lived keys use the salted ``FrodoKEM1344AES``.
 ///
 /// ```swift
 /// // Alice generates a key pair
-/// let alice = try FrodoKEM976SHAKE.PrivateKey()
+/// let alice = try EFrodoKEM1344AES.PrivateKey()
 ///
 /// // Bob gets Alice's public key and creates a shared secret
-/// let pub = try FrodoKEM976SHAKE.PublicKey(rawRepresentation: alicePublicKeyData)
+/// let pub = try EFrodoKEM1344AES.PublicKey(rawRepresentation: alicePublicKeyData)
 /// let result = try pub.generateSharedSecret()
 /// // Bob has result.sharedSecret. Send result.ciphertext to Alice
 ///
@@ -33,15 +32,15 @@ internal import Cliboqs
 /// Keys can be saved and loaded:
 /// ```swift
 /// let saved = alice.rawRepresentation
-/// let loaded = try FrodoKEM976SHAKE.PrivateKey(
+/// let loaded = try EFrodoKEM1344AES.PrivateKey(
 ///     rawRepresentation: saved,
 ///     publicKeyRepresentation: alice.publicKey.rawRepresentation
 /// )
 /// ```
-public enum FrodoKEM976SHAKE: Sendable {
-    static let algorithmName = "FrodoKEM-976-SHAKE"
+public enum EFrodoKEM1344AES: Sendable {
+    static let algorithmName = "eFrodoKEM-1344-AES"
 
-    /// A FrodoKEM-976-SHAKE private (decapsulation) key.
+    /// An eFrodoKEM-1344-AES private (decapsulation) key.
     public struct PrivateKey: Sendable {
         /// The raw key bytes.
         public let rawRepresentation: Data
@@ -50,14 +49,14 @@ public enum FrodoKEM976SHAKE: Sendable {
 
         /// Generates a new random key pair.
         public init() throws {
-            let kp = try kemGenerateKeyPair(algorithm: FrodoKEM976SHAKE.algorithmName)
+            let kp = try kemGenerateKeyPair(algorithm: EFrodoKEM1344AES.algorithmName)
             self.rawRepresentation = kp.secretKey
             self.publicKey = PublicKey(unchecked: kp.publicKey)
         }
 
         /// Imports a private key from raw bytes.
         public init(rawRepresentation: Data, publicKeyRepresentation: Data) throws {
-            let lengths = try kemExpectedKeyLengths(algorithm: FrodoKEM976SHAKE.algorithmName)
+            let lengths = try kemExpectedKeyLengths(algorithm: EFrodoKEM1344AES.algorithmName)
             guard rawRepresentation.count == lengths.secretKey else {
                 throw OQSError.invalidKeySize(expected: lengths.secretKey, actual: rawRepresentation.count)
             }
@@ -70,19 +69,19 @@ public enum FrodoKEM976SHAKE: Sendable {
 
         /// Decrypts a shared secret from the given ciphertext.
         public func decryptSharedSecret(_ ciphertext: Data) throws -> SharedSecret {
-            let ss = try kemDecapsulate(algorithm: FrodoKEM976SHAKE.algorithmName, ciphertext: ciphertext, secretKey: rawRepresentation)
+            let ss = try kemDecapsulate(algorithm: EFrodoKEM1344AES.algorithmName, ciphertext: ciphertext, secretKey: rawRepresentation)
             return SharedSecret(rawRepresentation: ss)
         }
     }
 
-    /// A FrodoKEM-976-SHAKE public (encapsulation) key.
+    /// An eFrodoKEM-1344-AES public (encapsulation) key.
     public struct PublicKey: Sendable {
         /// The raw key bytes.
         public let rawRepresentation: Data
 
         /// Imports a public key from raw bytes.
         public init(rawRepresentation: Data) throws {
-            let lengths = try kemExpectedKeyLengths(algorithm: FrodoKEM976SHAKE.algorithmName)
+            let lengths = try kemExpectedKeyLengths(algorithm: EFrodoKEM1344AES.algorithmName)
             guard rawRepresentation.count == lengths.publicKey else {
                 throw OQSError.invalidKeySize(expected: lengths.publicKey, actual: rawRepresentation.count)
             }
@@ -95,7 +94,7 @@ public enum FrodoKEM976SHAKE: Sendable {
 
         /// Generates a new shared secret using this public key.
         public func generateSharedSecret() throws -> SharedSecretResult {
-            let result = try kemEncapsulate(algorithm: FrodoKEM976SHAKE.algorithmName, publicKey: rawRepresentation)
+            let result = try kemEncapsulate(algorithm: EFrodoKEM1344AES.algorithmName, publicKey: rawRepresentation)
             return SharedSecretResult(
                 sharedSecret: SharedSecret(rawRepresentation: result.sharedSecret),
                 ciphertext: result.ciphertext
