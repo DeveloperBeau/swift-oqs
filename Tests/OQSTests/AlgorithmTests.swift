@@ -106,6 +106,44 @@ import Foundation
     @Test("FalconPadded-1024 keygen")
     func falconPadded1024() throws { _ = try FalconPadded1024.PrivateKey() }
 
+    // MARK: - Signature key generation: MQOM2
+
+    @Test("mqom2_cat1_gf16_fast_r3 keygen")
+    func mqom2Cat1Gf16FastR3() throws { _ = try MQOM2Cat1GF16FastR3.PrivateKey() }
+
+    @Test("mqom2_cat1_gf16_fast_r5 keygen")
+    func mqom2Cat1Gf16FastR5() throws { _ = try MQOM2Cat1GF16FastR5.PrivateKey() }
+
+    @Test("mqom2_cat1_gf16_short_r3 keygen")
+    func mqom2Cat1Gf16ShortR3() throws { _ = try MQOM2Cat1GF16ShortR3.PrivateKey() }
+
+    @Test("mqom2_cat1_gf16_short_r5 keygen")
+    func mqom2Cat1Gf16ShortR5() throws { _ = try MQOM2Cat1GF16ShortR5.PrivateKey() }
+
+    @Test("mqom2_cat3_gf16_fast_r3 keygen")
+    func mqom2Cat3Gf16FastR3() throws { _ = try MQOM2Cat3GF16FastR3.PrivateKey() }
+
+    @Test("mqom2_cat3_gf16_fast_r5 keygen")
+    func mqom2Cat3Gf16FastR5() throws { _ = try MQOM2Cat3GF16FastR5.PrivateKey() }
+
+    @Test("mqom2_cat3_gf16_short_r3 keygen")
+    func mqom2Cat3Gf16ShortR3() throws { _ = try MQOM2Cat3GF16ShortR3.PrivateKey() }
+
+    @Test("mqom2_cat3_gf16_short_r5 keygen")
+    func mqom2Cat3Gf16ShortR5() throws { _ = try MQOM2Cat3GF16ShortR5.PrivateKey() }
+
+    @Test("mqom2_cat5_gf16_fast_r3 keygen")
+    func mqom2Cat5Gf16FastR3() throws { _ = try MQOM2Cat5GF16FastR3.PrivateKey() }
+
+    @Test("mqom2_cat5_gf16_fast_r5 keygen")
+    func mqom2Cat5Gf16FastR5() throws { _ = try MQOM2Cat5GF16FastR5.PrivateKey() }
+
+    @Test("mqom2_cat5_gf16_short_r3 keygen")
+    func mqom2Cat5Gf16ShortR3() throws { _ = try MQOM2Cat5GF16ShortR3.PrivateKey() }
+
+    @Test("mqom2_cat5_gf16_short_r5 keygen")
+    func mqom2Cat5Gf16ShortR5() throws { _ = try MQOM2Cat5GF16ShortR5.PrivateKey() }
+
     // MARK: - Signature key generation: CROSS
 
     @Test("CROSS-RSDP-128-Balanced keygen")
